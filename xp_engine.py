@@ -548,6 +548,11 @@ def build_xp_analytics(
         if not metrics:
             continue
         minutes = mins.get("minutes")
+        player_raw = frame[
+            (frame["player_id"].astype(str) == str(pid))
+            & (frame["category"].astype(str).str.lower() == "passes")
+        ]
+        xstats.attach_regular_pass_stats(metrics, player_raw, minutes)
         xstats.apply_per90_metrics(metrics, minutes)
         players.append({
             "player_id": pid,

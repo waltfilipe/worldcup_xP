@@ -423,6 +423,40 @@ def compute_extended_xp_stats(grp: pd.DataFrame) -> dict[str, float | int]:
     return out
 
 
+def attach_regular_pass_stats(
+    metrics: dict[str, float | int],
+    raw_pass_frame: pd.DataFrame,
+    minutes: float | None,
+) -> None:
+    """Attach regular volume stats (per 90) aligned with passes_engine definitions."""
+    if raw_pass_frame is None or raw_pass_frame.empty:
+        for key in (
+            "passes_total",
+            "long_balls",
+            "progressive_passes",
+            "final_third_passes",
+            "passes_to_box",
+            "key_passes",
+        ):
+            metrics.setdefault(key, 0.0)
+        metrics.setdefault("pass_completion_pct", 0.0)
+        metrics.setdefault("long_ball_completion_pct", 0.0)
+        return
+
+    enriched = pe._enrich_passes(raw_pass_frame)
+    pass_metrics = pe.compute_player_metrics(enriched, {"minutes": minutes})
+    mins = float(minutes or 0)
+    factor = 90.0 / mins if mins > 0 else 0.0
+
+    for key in ("passes_total", "long_balls", "passes_to_box", "key_passes"):
+        metrics[key] = round(float(pass_metrics.get(key, 0) or 0) * factor, 3)
+
+    metrics["progressive_passes"] = float(pass_metrics.get("progressive_passes_p90", 0) or 0)
+    metrics["final_third_passes"] = float(pass_metrics.get("final_third_passes_p90", 0) or 0)
+    metrics["pass_completion_pct"] = pass_metrics.get("pass_completion_pct", 0.0)
+    metrics["long_ball_completion_pct"] = pass_metrics.get("long_ball_completion_pct", 0.0)
+
+
 def apply_per90_metrics(metrics: dict[str, float | int], minutes: float | None) -> None:
     """Add per-90 variants in place."""
     if not minutes or float(minutes) <= 0:
@@ -585,12 +619,12 @@ XP_COMPARE_METRIC_TOOLTIPS: dict[str, str] = {
         "independente do volume."
     ),
     "progressive_passes": (
-        "Passes progressivos bem-sucedidos por 90 minutos — "
-        "entregas que avançam a bola em direção ao gol adversário."
+        "Passes progressivos completados por jogo (p90) — critério Wyscout: "
+        "avanço ≥ 10 m em direção ao gol, ou ≥ 5 m dentro do terço final."
     ),
     "final_third_passes": (
-        "Passes completados para o terço final por 90 minutos — "
-        "participação ofensiva na zona de criação."
+        "Passes completados com destino no terço final (x ≥ 80 m) por jogo (p90) — "
+        "volume de entregas na zona de criação."
     ),
 }
 
@@ -903,7 +937,7 @@ SCATTER_SPECIAL_METRIC_OPTIONS: tuple[tuple[str, str], ...] = (
 )
 SCATTER_STAT_TYPE_OPTIONS: tuple[tuple[str, str], ...] = (
     ("regular", "Regular Stats"),
-    ("special", "Special Stat"),
+    ("special", "Special Stats"),
 )
 SCATTER_METRIC_OPTIONS: tuple[tuple[str, str], ...] = (
     *SCATTER_REGULAR_METRIC_OPTIONS,

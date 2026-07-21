@@ -1285,11 +1285,30 @@ def _xp_compare_stats_html(
     return "".join(rows)
 
 
+def _xp_compare_player_source(
+    player: dict | None,
+    xp_profile: dict | None,
+    *,
+    pass_player: dict | None = None,
+) -> dict:
+    """Merge xP profile with per-90 regular pass stats for side-by-side comparison."""
+    base = {**(player or {}), **(xp_profile or {})}
+    if pass_player:
+        base = pg_enrich_traditional_participation_fields(
+            base,
+            pass_player=pass_player,
+        )
+    if xp_profile:
+        base = {**base, **xp_profile}
+    return base
+
+
 def _render_xp_comparison_panel(
     primary: dict,
     *,
     all_players: list[dict],
     progression_by_id: dict[str, dict],
+    pass_by_id: dict[str, dict],
     xp_by_id: dict[str, dict],
 ) -> None:
     primary_id = str(primary.get("player_id"))
@@ -1337,9 +1356,17 @@ def _render_xp_comparison_panel(
         st.warning("Métricas xP indisponíveis para o jogador selecionado.")
         return
 
-    compare_player = progression_by_id.get(compare_id, {})
-    primary_source = {**primary, **primary_xp}
-    secondary_source = {**compare_player, **compare_xp}
+    compare_player = progression_by_id.get(compare_id) or pass_by_id.get(compare_id, {})
+    primary_source = _xp_compare_player_source(
+        primary,
+        primary_xp,
+        pass_player=pass_by_id.get(primary_id),
+    )
+    secondary_source = _xp_compare_player_source(
+        compare_player,
+        compare_xp,
+        pass_player=pass_by_id.get(compare_id),
+    )
     st.html(
         _xp_compare_stats_html(
             primary_source,
@@ -2012,6 +2039,15 @@ st.markdown(
         border-left: 3px solid #60a5fa;
     }
     .pres-xp-note p { margin: 0; color: #cbd5e1; font-size: 0.86rem; line-height: 1.5; }
+    .pres-xp-calc-steps {
+        margin: 0.65rem 0 0 0;
+        padding-left: 1.15rem;
+        color: #94a3b8;
+        font-size: 0.86rem;
+        line-height: 1.55;
+    }
+    .pres-xp-calc-steps li { margin-bottom: 0.35rem; }
+    .pres-xp-calc-steps strong { color: #e2e8f0; font-weight: 600; }
     .pres-feature-card {
         background: linear-gradient(160deg, #151b2b 0%, #101522 100%);
         border: 1px solid #2a3550;
@@ -6297,8 +6333,13 @@ XP_PA_REGULAR_STAT_TOOLTIPS: dict[str, str] = {
     "pass_completion_pct": "Percentual de passes completados.",
     "long_balls": "Passes longos (≥30 m) por 90 minutos.",
     "long_ball_completion_pct": "Percentual de passes longos completados.",
-    "progressive_passes": "Passes progressivos bem-sucedidos por 90 minutos.",
-    "final_third_passes": "Passes completados para o terço final por 90 minutos.",
+    "progressive_passes": (
+        "Passes progressivos completados por jogo (p90) — critério Wyscout: "
+        "avanço ≥ 10 m em direção ao gol, ou ≥ 5 m dentro do terço final."
+    ),
+    "final_third_passes": (
+        "Passes completados com destino no terço final (x ≥ 80 m) por jogo (p90)."
+    ),
     "passes_to_box": "Passes completados para a área por 90 minutos.",
     "key_passes": "Passes que geram finalização por 90 minutos.",
     "pass_mean_distance": "Distância média dos passes completados, em metros.",
@@ -7685,6 +7726,10 @@ def render_scatter_section(
     xp_by_id: dict[str, dict] | None = None,
 ) -> None:
     st.subheader("Dispersão — Stats xP")
+    st.caption(
+        "Escolha entre **Regular Stats** (volume tradicional de passe) e "
+        "**Special Stats** (xP, threat passes e tipos especiais de entrega)."
+    )
 
     if not all_players:
         st.info("No players available.")
@@ -7731,7 +7776,7 @@ def render_scatter_section(
     type_keys = [key for key, _label in xstats.scatter_stat_type_options()]
     type_labels = {key: label for key, label in xstats.scatter_stat_type_options()}
     stat_type = st.selectbox(
-        "Tipo de stat",
+        "Tipo de métrica",
         options=type_keys,
         format_func=lambda key: type_labels[key],
         key=SCATTER_STAT_TYPE_KEY,
@@ -8378,6 +8423,7 @@ def render_player_analysis_section(
                     player,
                     all_players=all_players,
                     progression_by_id=progression_by_id,
+                    pass_by_id=pass_by_id,
                     xp_by_id=xp_by_id,
                 )
             else:
@@ -8752,11 +8798,35 @@ def render_presentation_tab(
     st.markdown(
         '<div class="pres-card pres-card-hero">'
         f"<h4>{html.escape(APP_NAME)} · valor esperado do passe (xP)</h4>"
-        "<p>O <strong>xP</strong> (<em>expected Pass</em>) responde a uma pergunta simples: "
-        "<strong>quão perigoso é o lugar onde o passe termina?</strong> "
-        "Cada passe completado ganha uma nota conforme a raridade e o valor ofensivo do destino — "
-        "quanto mais raro e mais perto de criar uma chance, maior o xP. "
-        f"As notas são sempre comparadas com jogadores da mesma posição na {html.escape(APP_LEAGUE)}.</p>"
+        "<p>O <strong>xP</strong> (<em>expected Pass</em>) mede o <strong>valor ofensivo de cada passe "
+        "completado</strong>, com base em <em>onde a bola chega</em> e em <em>quão incomum</em> é "
+        "aquela entrega no contexto da Copa do Mundo.</p>"
+        "<p style='margin-top:0.55rem'>Não é só “perigo no destino”: o modelo compara origem e destino "
+        "do passe com o padrão do torneio, premia avanços em direção ao gol e desconta entregas "
+        "rotineiras (curtas, laterais, no setor defensivo). "
+        f"As notas são sempre relativas a jogadores da mesma posição na {html.escape(APP_LEAGUE)}.</p>"
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<div class="pres-card">'
+        "<h4>Como o xP é calculado</h4>"
+        "<p>Cada passe completado passa por quatro etapas — da geometria do campo à nota final:</p>"
+        "<ol class='pres-xp-calc-steps'>"
+        "<li><strong>Mapeamento espacial.</strong> O campo é dividido em células 12×8 (origem) e 12×8 "
+        "(destino). Cada passe vira um par origem → destino.</li>"
+        "<li><strong>Referência do torneio.</strong> Consultamos quantos passes semelhantes ocorreram na "
+        "Copa. Destinos raros e avançados recebem nota base mais alta — não medimos “perigo” de forma "
+        "absoluta, mas sim valor relativo ao que o torneio costuma produzir.</li>"
+        "<li><strong>Ajuste de progressão.</strong> Passes que avançam em direção ao gol ganham bônus; "
+        "recuos e trocas laterais perdem parte do valor, mesmo com destino tecnicamente avançado.</li>"
+        "<li><strong>Ajuste de acessibilidade.</strong> Entregas curtas e fáceis no setor defensivo são "
+        "descontadas — o xP recompensa passes que de fato mudam o estágio do ataque.</li>"
+        "</ol>"
+        "<p style='margin-top:0.65rem'>A nota de cada passe fica entre 0 e 1. Somamos (ou calculamos "
+        "médias e taxas) ao longo da temporada. Passes <em>threat</em> são os que superam o valor "
+        "esperado para aquele contexto — os mais valiosos do jogador.</p>"
         "</div>",
         unsafe_allow_html=True,
     )
@@ -8818,7 +8888,8 @@ def render_presentation_tab(
         "<h5>Player Analysis</h5><p>Perfil completo de um jogador, com stats e rank na posição.</p></div>"
         '<div class="pres-tile">'
         '<span class="pres-icon"><i class="fa-solid fa-braille"></i></span>'
-        "<h5>Dispersão</h5><p>Compare jogadores de uma posição em um gráfico X/Y.</p></div>"
+        "<h5>Dispersão</h5><p>Compare jogadores da mesma posição em um gráfico X/Y — "
+        "Regular Stats ou Special Stats.</p></div>"
         '<div class="pres-tile">'
         '<span class="pres-icon"><i class="fa-solid fa-location-dot"></i></span>'
         "<h5>Maps</h5><p>Veja os passes no campo, coloridos pelo xP.</p></div>"
