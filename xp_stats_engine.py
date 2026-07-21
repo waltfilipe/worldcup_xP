@@ -1640,26 +1640,60 @@ def distance_index_grade_for_profile(profile: dict, band: str) -> str | None:
     )
 
 
-def attach_all_stats_ranks(players: list[dict]) -> None:
-    """Rank every stats-tab and Player Analysis metric within position group."""
+def _eligible_profile_pool_rows(rows: list[dict]) -> list[dict]:
+    return [row for row in rows if row.get("xp_profile_bars_eligible")]
+
+
+def _clear_metric_ranks(row: dict, metrics: tuple[str, ...]) -> None:
+    for metric in metrics:
+        if metric.startswith("xp_dist_index_"):
+            continue
+        row.pop(f"{metric}_rank_in_group", None)
+        row.pop(f"{metric}_rank_pool_in_group", None)
+
+
+def attach_metric_ranks_within_position(
+    players: list[dict],
+    metrics: tuple[str, ...],
+    *,
+    eligible_only: bool = False,
+) -> None:
+    """Rank metrics within position group, optionally restricted to profile-eligible peers."""
     pools: dict[str, list[dict]] = {}
     for player in players:
         group = str(player.get("position_group") or "CM")
         pools.setdefault(group, []).append(player)
+
+    rank_metrics = tuple(
+        metric for metric in metrics if not metric.startswith("xp_dist_index_")
+    )
+    for rows in pools.values():
+        comparison_rows = _eligible_profile_pool_rows(rows) if eligible_only else rows
+        pool_size = len(comparison_rows)
+        if eligible_only:
+            for row in rows:
+                if not row.get("xp_profile_bars_eligible"):
+                    _clear_metric_ranks(row, rank_metrics)
+        if not comparison_rows:
+            continue
+        for metric in rank_metrics:
+            comparison_rows.sort(
+                key=lambda row: float(row.get(metric) or 0.0),
+                reverse=True,
+            )
+            for rank, row in enumerate(comparison_rows, start=1):
+                row[f"{metric}_rank_in_group"] = rank
+                row[f"{metric}_rank_pool_in_group"] = pool_size
+
+
+def attach_all_stats_ranks(players: list[dict]) -> None:
+    """Rank stats-tab and Player Analysis metrics within eligible profile peers."""
     rank_metrics = tuple(
         dict.fromkeys(
             (*XP_STATS_RANK_METRICS, *XP_PLAYER_ANALYSIS_RANK_METRICS, *XP_REGULAR_STAT_RANK_KEYS)
         )
     )
-    for rows in pools.values():
-        pool_size = len(rows)
-        for metric in rank_metrics:
-            if metric.startswith("xp_dist_index_"):
-                continue
-            rows.sort(key=lambda row: float(row.get(metric) or 0.0), reverse=True)
-            for rank, row in enumerate(rows, start=1):
-                row[f"{metric}_rank_in_group"] = rank
-                row[f"{metric}_rank_pool_in_group"] = pool_size
+    attach_metric_ranks_within_position(players, rank_metrics, eligible_only=True)
 
 
 def metric_qualitative_grade(profile: dict, key: str) -> str | None:

@@ -578,18 +578,14 @@ def build_xp_analytics(
 
 
 def attach_xp_metric_ranks(players: list[dict]) -> None:
-    """Attach within-position ranks for core xP dashboard metrics."""
-    pools: dict[str, list[dict]] = {}
-    for player in players:
-        group = str(player.get("position_group") or "CM")
-        pools.setdefault(group, []).append(player)
-    for rows in pools.values():
-        pool_size = len(rows)
-        for metric in XP_POSITION_RANK_METRICS:
-            rows.sort(key=lambda row: float(row.get(metric) or 0.0), reverse=True)
-            for rank, row in enumerate(rows, start=1):
-                row[f"{metric}_rank_in_group"] = rank
-                row[f"{metric}_rank_pool_in_group"] = pool_size
+    """Attach within-position ranks for core xP dashboard metrics (eligible peers only)."""
+    import xp_stats_engine as xstats
+
+    xstats.attach_metric_ranks_within_position(
+        players,
+        XP_POSITION_RANK_METRICS,
+        eligible_only=True,
+    )
 
 
 def rank_xp_players_by_position(players: list[dict]) -> dict[str, list[dict]]:
