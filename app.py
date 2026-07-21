@@ -2050,24 +2050,112 @@ st.markdown(
     }
     .pres-xp-calc-steps li { margin-bottom: 0.35rem; }
     .pres-xp-calc-steps strong { color: #e2e8f0; font-weight: 600; }
-    .pres-xp-calc-table {
-        width: 100%;
-        margin-top: 0.65rem;
-        border-collapse: collapse;
-        color: #94a3b8;
-        font-size: 0.86rem;
+    .pres-hero-list {
+        list-style: none;
+        margin: 0.35rem 0 0 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+    .pres-hero-list li {
+        position: relative;
+        padding-left: 1.4rem;
+        color: #cbd5e1;
+        font-size: 0.9rem;
         line-height: 1.55;
     }
-    .pres-xp-calc-table td {
-        padding: 0.35rem 0.65rem 0.35rem 0;
-        vertical-align: top;
+    .pres-hero-list li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.55rem;
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background: #60a5fa;
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.16);
     }
-    .pres-xp-calc-table td:first-child {
-        width: 9.5rem;
-        color: #e2e8f0;
+    .pres-hero-list em {
+        color: #f1f5f9;
+        font-style: italic;
+        font-weight: 500;
+    }
+    .pres-calc-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.7rem;
+        margin-top: 0.85rem;
+    }
+    @media (max-width: 900px) {
+        .pres-calc-grid { grid-template-columns: 1fr; }
+    }
+    .pres-calc-step {
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.8rem;
+        padding: 0.85rem 0.95rem;
+        border-radius: 12px;
+        background: rgba(23, 32, 53, 0.55);
+        border: 1px solid #253150;
+        transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .pres-calc-step:hover { border-color: #3b82f6; transform: translateY(-2px); }
+    .pres-calc-num {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.9rem;
+        height: 1.9rem;
+        border-radius: 9px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #dbeafe;
+        background: rgba(59, 130, 246, 0.16);
+        border: 1px solid rgba(96, 165, 250, 0.4);
+    }
+    .pres-calc-body { display: flex; flex-direction: column; gap: 0.15rem; }
+    .pres-calc-body h5 {
+        margin: 0;
+        color: #f1f5f9;
+        font-size: 0.9rem;
         font-weight: 600;
-        white-space: nowrap;
     }
+    .pres-calc-body p {
+        margin: 0;
+        color: #94a3b8;
+        font-size: 0.83rem;
+        line-height: 1.45;
+    }
+    .pres-about-card {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        background: linear-gradient(145deg, #172035 0%, #101522 60%, #0f172a 100%);
+        border: 1px solid #334155;
+        border-radius: 14px;
+        padding: 1.1rem 1.25rem;
+        margin-bottom: 0.85rem;
+    }
+    .pres-about-icon {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.9rem;
+        height: 2.9rem;
+        border-radius: 12px;
+        font-size: 1.25rem;
+        color: #dbeafe;
+        background: rgba(59, 130, 246, 0.16);
+        border: 1px solid rgba(96, 165, 250, 0.4);
+    }
+    .pres-about-body h4 { margin: 0 0 0.3rem 0; color: #f1f5f9; font-size: 1rem; }
+    .pres-about-body p { margin: 0; color: #94a3b8; font-size: 0.88rem; line-height: 1.5; }
+    .pres-about-body p + p { margin-top: 0.5rem; }
+    .pres-about-body strong { color: #e2e8f0; font-weight: 600; }
     .pres-feature-card {
         background: linear-gradient(160deg, #151b2b 0%, #101522 100%);
         border: 1px solid #2a3550;
@@ -8844,13 +8932,15 @@ def render_presentation_tab(
     st.markdown(
         '<div class="pres-card pres-card-hero">'
         f"<h4>{html.escape(APP_NAME)} · xP</h4>"
-        "<p>O <em>xP (Expected Pass)</em> tem como objetivo definir um valor para cada passe "
-        "realizado por um atleta.</p>"
-        "<p style='margin-top:0.55rem'>Cada passe recebe uma nota conforme a raridade do par "
-        "<em>origem → destino</em> — ou seja, o quanto aquela combinação de zonas é incomum "
-        "em relação a mais de <em>900k</em> passes.</p>"
-        "<p style='margin-top:0.55rem'>O modelo também ajusta o valor pela progressão do passe "
-        "(se progride no campo) e pela acessibilidade do destino (destinos mais ou menos óbvios).</p>"
+        "<ul class='pres-hero-list'>"
+        "<li>O <em>xP (Expected Pass)</em> tem como objetivo definir um valor para cada passe "
+        "realizado por um atleta.</li>"
+        "<li>Cada passe recebe uma nota conforme a raridade do par <em>origem → destino</em> — "
+        "ou seja, o quanto aquela combinação de zonas é incomum em relação a mais de "
+        "<em>900k</em> passes.</li>"
+        "<li>O modelo também ajusta o valor pela progressão do passe (se progride no campo) e "
+        "pela acessibilidade do destino (destinos mais ou menos óbvios).</li>"
+        "</ul>"
         "</div>",
         unsafe_allow_html=True,
     )
@@ -8858,47 +8948,38 @@ def render_presentation_tab(
     st.markdown(
         '<div class="pres-card">'
         "<h4>Como o xP é calculado</h4>"
-        "<table class='pres-xp-calc-table'>"
-        "<tbody>"
-        "<tr><td>Campo em células</td>"
-        "<td>O campo é dividido em grades 12×8 de origem e 12×8 de destino</td></tr>"
-        "<tr><td>Referência global</td>"
-        "<td>Raridade medida no pool de 900k+ passes</td></tr>"
-        "<tr><td>Progressão</td>"
-        "<td>Avanço ao gol aumenta o valor; recuo e troca lateral reduzem</td></tr>"
-        "<tr><td>Acessibilidade</td>"
-        "<td>Passes curtos e fáceis no setor defensivo são descontados</td></tr>"
-        "</tbody></table>"
+        "<div class='pres-calc-grid'>"
+        "<div class='pres-calc-step'>"
+        "<span class='pres-calc-num'>1</span>"
+        "<div class='pres-calc-body'><h5>Campo em células</h5>"
+        "<p>O campo é dividido em grades 12×8 de origem e 12×8 de destino.</p></div></div>"
+        "<div class='pres-calc-step'>"
+        "<span class='pres-calc-num'>2</span>"
+        "<div class='pres-calc-body'><h5>Referência global</h5>"
+        "<p>Raridade medida no pool de 900k+ passes.</p></div></div>"
+        "<div class='pres-calc-step'>"
+        "<span class='pres-calc-num'>3</span>"
+        "<div class='pres-calc-body'><h5>Progressão</h5>"
+        "<p>Avanço ao gol aumenta o valor; recuo e troca lateral reduzem.</p></div></div>"
+        "<div class='pres-calc-step'>"
+        "<span class='pres-calc-num'>4</span>"
+        "<div class='pres-calc-body'><h5>Acessibilidade</h5>"
+        "<p>Passes curtos e fáceis no setor defensivo são descontados.</p></div></div>"
+        "</div>"
         "</div>",
         unsafe_allow_html=True,
     )
 
-    st.markdown('<p class="pres-section-label">xP na prática — 3 exemplos</p>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="pres-xp-examples">'
-        '<div class="pres-xp-example pres-xp-low">'
-        '<span class="pres-xp-tag">xP baixo</span>'
-        "<h5>Recuo lateral no meio-campo</h5>"
-        "<p>Passe curto e seguro para o lado, longe da meta. É comum e quase sempre completado, "
-        "então agrega pouco valor ofensivo.</p></div>"
-        '<div class="pres-xp-example pres-xp-mid">'
-        '<span class="pres-xp-tag">xP médio</span>'
-        "<h5>Inversão de jogo de 40m</h5>"
-        "<p>Troca o lado do ataque e encontra o espaço livre. Difícil de executar e muda a "
-        "estrutura da defesa, mas ainda não é a bola do gol.</p></div>"
-        '<div class="pres-xp-example pres-xp-high">'
-        '<span class="pres-xp-tag">xP alto</span>'
-        "<h5>Passe que quebra a linha para a área</h5>"
-        "<p>Rompe a última linha e deixa o companheiro cara a cara com o gol. Raro, arriscado "
-        "e diretamente ligado a criar chances — o tipo de passe mais valioso.</p></div>"
-        "</div>",
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        '<div class="pres-card pres-xp-note">'
-        "<p><strong>Por que somar isso ao longo da temporada?</strong> Um jogador pode completar "
-        "muitos passes e ainda gerar pouco xP (jogo lateral). Outro arrisca menos passes, mas "
-        "cada um vale muito. O xP separa <em>quem move a bola</em> de <em>quem cria perigo</em>.</p>"
+        '<div class="pres-about-card">'
+        '<span class="pres-about-icon"><i class="fa-solid fa-people-group"></i></span>'
+        "<div class='pres-about-body'>"
+        "<h4>O que é o dashboard</h4>"
+        "<p>Uma ferramenta de <strong>análise por posição</strong> dos atletas: cada jogador é "
+        "avaliado pelo seu perfil de passe e comparado apenas com outros da mesma função em campo.</p>"
+        "<p>Assim, o xP revela quem realmente se destaca dentro do próprio papel tático — de "
+        "zagueiros que constroem a saída de bola a meias e pontas que criam as jogadas decisivas.</p>"
+        "</div>"
         "</div>",
         unsafe_allow_html=True,
     )
