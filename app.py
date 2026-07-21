@@ -6353,7 +6353,7 @@ def _xp_profile_bars_html(xp_profile: dict | None) -> str:
     if not xp_profile.get("xp_profile_bars_eligible", True):
         min_pct = float(xp_profile.get("xp_profile_min_minutes_pct") or xstats.XP_PROFILE_MIN_MINUTES_PCT)
         min_passes = xp_profile.get("xp_profile_min_passes")
-        passes_txt = f"{float(min_passes):.0f}" if min_passes is not None else "P20"
+        passes_txt = f"{float(min_passes):.0f}" if min_passes is not None else "P30"
         note = (
             '<p class="pa-xp-profile-eligibility-note">'
             f"Perfil xP indisponível — requer &gt;{min_pct * 100:.0f}% dos minutos "

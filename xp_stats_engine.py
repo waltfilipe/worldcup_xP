@@ -38,7 +38,7 @@ RESIDUAL_COL = "xp_residual"
 DISTANCE_BAND_LABELS = xse.DISTANCE_BAND_LABELS
 XP_DISTANCE_BAND_MAX_SHORT_M = xse.XP_DISTANCE_BAND_MAX_SHORT_M
 BANDS = xse.DISTANCE_BAND_ORDER
-DISTANCE_INDEX_MIN_PASS_PERCENTILE = 20
+DISTANCE_INDEX_MIN_PASS_PERCENTILE = 30
 XP_PROFILE_MIN_MINUTES_PCT = 0.30
 XP_PROFILE_BAR_PASS_PERCENTILE = DISTANCE_INDEX_MIN_PASS_PERCENTILE
 
@@ -797,7 +797,7 @@ def p20_pass_thresholds_by_group(
     *,
     percentile: int = DISTANCE_INDEX_MIN_PASS_PERCENTILE,
 ) -> dict[str, float]:
-    """Minimum passes at the position-group percentile (default P20)."""
+    """Minimum passes at the position-group percentile (default P30)."""
     pools: dict[str, list[float]] = {}
     for player in players:
         group = str(player.get("position_group") or "CM")
@@ -1311,7 +1311,7 @@ def xp_profile_bar_pass_thresholds(
     *,
     percentile: int = XP_PROFILE_BAR_PASS_PERCENTILE,
 ) -> dict[str, float]:
-    """Minimum completed passes at the position-group percentile (default P20)."""
+    """Minimum completed passes at the position-group percentile (default P30)."""
     return p20_pass_thresholds_by_group(
         players,
         "passes_completed",
@@ -1334,7 +1334,7 @@ def is_xp_profile_bar_eligible(
 
 
 def attach_xp_profile_bar_eligibility(players: list[dict]) -> None:
-    """Flag players who meet minutes (>30%) and P20 pass-volume thresholds."""
+    """Flag players who meet minutes (>30%) and P30 pass-volume thresholds."""
     pools: dict[str, list[dict]] = {}
     for player in players:
         group = str(player.get("position_group") or "CM")
@@ -1389,7 +1389,7 @@ def attach_composite_indices(players: list[dict]) -> None:
         for raw_key, composite in composites.items():
             _attach_index_display_scores(rows, raw_key, display_map[raw_key], composite)
 
-        # Profile bars: rank only among eligible peers (minutes > 30%, passes >= P20).
+        # Profile bars: rank only among eligible peers (minutes > 30%, passes >= P30).
         if eligible_rows:
             for raw_key, display_key, metric_cols in XP_PROFILE_BAR_SPECS:
                 _attach_median_rank_display_scores(
@@ -1790,7 +1790,7 @@ def format_stats_value(key: str, value: float | int | None) -> str:
         return f"{int(val):,}"
     if key.startswith("xp_dist_index_"):
         if value is None:
-            return "— (< P20)"
+            return "— (< P30)"
         return f"{val:.2f}"
     if key.startswith("xp_m4_threat_rate"):
         return f"{100 * val:.1f}%"
