@@ -1136,6 +1136,8 @@ def _progression_compare_stats_html(
 
 
 def _xp_compare_profile_value(source: dict, key: str) -> tuple[str, float | None]:
+    if not source.get("xp_profile_bars_eligible", True):
+        return "—", None
     val = source.get(key)
     if val is None:
         return "—", None
@@ -3629,6 +3631,15 @@ st.markdown(
         justify-content: space-evenly;
         min-height: 0;
     }
+    .pa-xp-profile-eligibility-note {
+        margin: 0;
+        color: #94a3b8;
+        font-size: 0.78rem;
+        line-height: 1.45;
+    }
+    .pa-xp-profile-bars-ineligible {
+        justify-content: center;
+    }
     .pa-xp-gradient-bar-row {
         display: flex;
         flex-direction: column;
@@ -5957,9 +5968,13 @@ def _xp_archetype_radar_b64(xp_profile: dict | None) -> str:
 
 
 def _xp_profile_display_pct(xp_profile: dict, display_key: str) -> float | None:
+    if not xp_profile.get("xp_profile_bars_eligible", True):
+        return None
     try:
         score = float(xp_profile.get(display_key))
     except (TypeError, ValueError):
+        return None
+    if score != score:  # NaN guard without numpy
         return None
     return max(0.0, min(100.0, (score - 3.0) / 6.0 * 100.0))
 
@@ -6082,6 +6097,17 @@ def _xp_gradient_bar_row_html(label: str, display_key: str, xp_profile: dict) ->
 def _xp_profile_bars_html(xp_profile: dict | None) -> str:
     if not xp_profile:
         return ""
+    if not xp_profile.get("xp_profile_bars_eligible", True):
+        min_pct = float(xp_profile.get("xp_profile_min_minutes_pct") or xstats.XP_PROFILE_MIN_MINUTES_PCT)
+        min_passes = xp_profile.get("xp_profile_min_passes")
+        passes_txt = f"{float(min_passes):.0f}" if min_passes is not None else "P20"
+        note = (
+            '<p class="pa-xp-profile-eligibility-note">'
+            f"Perfil xP indisponível — requer &gt;{min_pct * 100:.0f}% dos minutos "
+            f"e ≥{passes_txt} passes completados (P{xstats.XP_PROFILE_BAR_PASS_PERCENTILE} na posição)."
+            "</p>"
+        )
+        return f'<div class="pa-xp-profile-bars pa-xp-profile-bars-ineligible">{note}</div>'
     rows = "".join(
         _xp_gradient_bar_row_html(xstats.XP_PROFILE_BAR_LABELS[key], key, xp_profile)
         for key in xstats.XP_PROFILE_BAR_KEYS

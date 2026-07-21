@@ -48,6 +48,17 @@ XT_MAP_FIG_DPI = 160
 XT_MAP_REF_WIDTH = 7.8
 XT_MAP_COLOR_PERCENTILE = (5.0, 95.0)
 
+# Profile origin heatmap — footer band for direction-of-attack chrome.
+PROFILE_FOOTER_FRAC = 0.16
+PROFILE_ATTACK_ARROW_COLOR = "#94a3b8"
+PROFILE_ATTACK_LABEL_COLOR = "#94a3b8"
+PROFILE_ATTACK_ARROW_SPAN_RATIO = 0.14
+PROFILE_ATTACK_ARROW_Y_OFFSET = 0.018
+PROFILE_ATTACK_LABEL_Y_OFFSET = 0.040
+PROFILE_ATTACK_MUTATION = 9.5
+PROFILE_ATTACK_LW = 1.25
+PROFILE_ATTACK_LABEL_FONT = 6.4
+
 
 def _resolve_figsize(
     *,
@@ -120,6 +131,43 @@ def _attack_arrow(fig, *, fig_w: float, has_cbar: bool = False, dashboard: bool 
         transform=fig.transFigure,
         fontsize=(6.2 if dashboard else 7.0) * scale,
         color="#aaaaaa",
+    )
+
+
+def _profile_attack_arrow(fig, ax) -> None:
+    """Centered direction-of-attack arrow below the profile pitch footprint."""
+    pos = ax.get_position()
+    center_x = pos.x0 + pos.width * 0.5
+    half_span = pos.width * PROFILE_ATTACK_ARROW_SPAN_RATIO
+    arrow_y = pos.y0 - PROFILE_ATTACK_ARROW_Y_OFFSET
+    label_y = pos.y0 - PROFILE_ATTACK_LABEL_Y_OFFSET
+
+    fig.patches.append(
+        FancyArrowPatch(
+            (center_x - half_span, arrow_y),
+            (center_x + half_span, arrow_y),
+            transform=fig.transFigure,
+            arrowstyle="-|>",
+            mutation_scale=PROFILE_ATTACK_MUTATION,
+            linewidth=PROFILE_ATTACK_LW,
+            color=PROFILE_ATTACK_ARROW_COLOR,
+            alpha=0.95,
+            clip_on=False,
+            zorder=6,
+        )
+    )
+    fig.text(
+        center_x,
+        label_y,
+        "Direction of Attack",
+        ha="center",
+        va="top",
+        transform=fig.transFigure,
+        fontsize=PROFILE_ATTACK_LABEL_FONT,
+        color=PROFILE_ATTACK_LABEL_COLOR,
+        alpha=0.98,
+        fontweight=500,
+        zorder=6,
     )
 
 
@@ -594,7 +642,7 @@ def draw_action_origin_smooth_heatmap(
     from scipy.ndimage import gaussian_filter
 
     if profile:
-        figsize = (3.85, 2.65)
+        figsize = (3.85, 2.85)
         dpi = 220
     elif mini:
         figsize = (FIG_W_MINI, FIG_H_MINI)
@@ -661,7 +709,10 @@ def draw_action_origin_smooth_heatmap(
         ax.set_title(title, color="white", fontsize=8.0, pad=5)
     else:
         ax.set_title("")
-        _attack_arrow(fig, fig_w=figsize[0], dashboard=True)
+        fig.subplots_adjust(left=0.0, right=1.0, top=0.98, bottom=PROFILE_FOOTER_FRAC)
+        pos = ax.get_position()
+        ax.set_position([pos.x0, pos.y0 + 0.02, pos.width, pos.height * 0.94])
+        _profile_attack_arrow(fig, ax)
     ax.set_axis_off()
     return fig
 

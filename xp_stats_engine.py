@@ -39,6 +39,8 @@ DISTANCE_BAND_LABELS = xse.DISTANCE_BAND_LABELS
 XP_DISTANCE_BAND_MAX_SHORT_M = xse.XP_DISTANCE_BAND_MAX_SHORT_M
 BANDS = xse.DISTANCE_BAND_ORDER
 DISTANCE_INDEX_MIN_PASS_PERCENTILE = 20
+XP_PROFILE_MIN_MINUTES_PCT = 0.25
+XP_PROFILE_BAR_PASS_PERCENTILE = DISTANCE_INDEX_MIN_PASS_PERCENTILE
 
 DISTANCE_INDEX_GRADES: tuple[tuple[str, float], ...] = (
     ("Good", 0.20),
@@ -631,7 +633,9 @@ XP_COMPARE_METRIC_TOOLTIPS: dict[str, str] = {
 XP_PROFILE_BAR_TOOLTIPS: dict[str, str] = {
     "xp_activity_display": (
         "Média do rank na posição de xP/jogo e ações de impacto/jogo — "
-        "com que frequência participa gerando valor."
+        "com que frequência participa gerando valor. "
+        f"Comparado apenas entre jogadores com &gt;{int(XP_PROFILE_MIN_MINUTES_PCT * 100)}% "
+        f"dos minutos e volume ≥ P{XP_PROFILE_BAR_PASS_PERCENTILE} de passes na posição."
     ),
     "xp_edge_display": (
         "Média do rank na posição de xP/passe e xP/ação de impacto — "
@@ -774,6 +778,13 @@ CONSISTENCY_METRICS: tuple[str, ...] = (
     "xp_games_above_median_pct",
 )
 CONSISTENCY_INVERT_METRICS: tuple[str, ...] = ()
+
+XP_PROFILE_BAR_SPECS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
+    ("xp_activity_index", "xp_activity_display", ACTIVITY_METRICS),
+    ("xp_edge_index", "xp_edge_display", EDGE_METRICS),
+    ("xp_quality_index", "xp_quality_display", QUALITY_METRICS),
+    ("xp_consistency_index", "xp_consistency_display", CONSISTENCY_METRICS),
+)
 
 
 def iter_xp_player_analysis_blocks() -> tuple[tuple[str, tuple[str, ...]], ...]:
@@ -1277,6 +1288,60 @@ def _attach_xp_profile_archetypes(rows: list[dict]) -> None:
         row["xp_profile_archetype_description"] = XP_PROFILE_ARCHETYPE_DESCRIPTIONS[archetype]
 
 
+def _clear_xp_profile_bar_scores(row: dict) -> None:
+    for raw_key, display_key, _metrics in XP_PROFILE_BAR_SPECS:
+        row[display_key] = None
+        row[raw_key] = None
+        row.pop(f"{raw_key}_rank_in_group", None)
+        row.pop(f"{raw_key}_rank_pool_in_group", None)
+    row.pop("xp_profile_archetype", None)
+    row.pop("xp_profile_archetype_label", None)
+    row.pop("xp_profile_archetype_description", None)
+
+
+def xp_profile_bar_pass_thresholds(
+    players: list[dict],
+    *,
+    percentile: int = XP_PROFILE_BAR_PASS_PERCENTILE,
+) -> dict[str, float]:
+    """Minimum completed passes at the position-group percentile (default P20)."""
+    return p20_pass_thresholds_by_group(
+        players,
+        "passes_completed",
+        percentile=percentile,
+    )
+
+
+def is_xp_profile_bar_eligible(
+    player: dict,
+    pass_thresholds: dict[str, float],
+    *,
+    min_minutes_pct: float = XP_PROFILE_MIN_MINUTES_PCT,
+) -> bool:
+    minutes_pct = player.get("minutes_pct")
+    if minutes_pct is None or float(minutes_pct) <= float(min_minutes_pct):
+        return False
+    group = str(player.get("position_group") or "CM")
+    min_passes = float(pass_thresholds.get(group, 0.0))
+    return float(player.get("passes_completed") or 0.0) >= min_passes
+
+
+def attach_xp_profile_bar_eligibility(players: list[dict]) -> None:
+    """Flag players who meet minutes (>25%) and P20 pass-volume thresholds."""
+    pools: dict[str, list[dict]] = {}
+    for player in players:
+        group = str(player.get("position_group") or "CM")
+        pools.setdefault(group, []).append(player)
+
+    for rows in pools.values():
+        pass_thresholds = xp_profile_bar_pass_thresholds(rows)
+        for row in rows:
+            group = str(row.get("position_group") or "CM")
+            row["xp_profile_min_passes"] = round(float(pass_thresholds.get(group, 0.0)), 1)
+            row["xp_profile_min_minutes_pct"] = XP_PROFILE_MIN_MINUTES_PCT
+            row["xp_profile_bars_eligible"] = is_xp_profile_bar_eligible(row, pass_thresholds)
+
+
 def attach_composite_indices(players: list[dict]) -> None:
     """Within-position z-score composites for xP archetype radar and profile bars."""
     if not players:
@@ -1290,6 +1355,14 @@ def attach_composite_indices(players: list[dict]) -> None:
         _attach_game_std_adjusted(rows)
         df = pd.DataFrame(rows)
         position_group = str(rows[0].get("position_group") or "")
+        pass_thresholds = xp_profile_bar_pass_thresholds(rows)
+        for row in rows:
+            group = str(row.get("position_group") or "CM")
+            row["xp_profile_min_passes"] = round(float(pass_thresholds.get(group, 0.0)), 1)
+            row["xp_profile_min_minutes_pct"] = XP_PROFILE_MIN_MINUTES_PCT
+            row["xp_profile_bars_eligible"] = is_xp_profile_bar_eligible(row, pass_thresholds)
+
+        eligible_rows = [row for row in rows if row.get("xp_profile_bars_eligible")]
         builder_cols = list(BUILDER_BASE_METRICS)
         if position_group == "fullbacks":
             builder_cols.extend(BUILDER_FB_METRICS)
@@ -1309,20 +1382,19 @@ def attach_composite_indices(players: list[dict]) -> None:
         for raw_key, composite in composites.items():
             _attach_index_display_scores(rows, raw_key, display_map[raw_key], composite)
 
-        # Profile bars: average of within-position ranks of their component metrics.
-        _attach_median_rank_display_scores(
-            rows, ACTIVITY_METRICS, "xp_activity_index", "xp_activity_display"
-        )
-        _attach_median_rank_display_scores(
-            rows, EDGE_METRICS, "xp_edge_index", "xp_edge_display"
-        )
-        _attach_median_rank_display_scores(
-            rows, QUALITY_METRICS, "xp_quality_index", "xp_quality_display"
-        )
-        _attach_median_rank_display_scores(
-            rows, CONSISTENCY_METRICS, "xp_consistency_index", "xp_consistency_display"
-        )
-        _attach_xp_profile_archetypes(rows)
+        # Profile bars: rank only among eligible peers (minutes > 25%, passes >= P20).
+        if eligible_rows:
+            for raw_key, display_key, metric_cols in XP_PROFILE_BAR_SPECS:
+                _attach_median_rank_display_scores(
+                    eligible_rows,
+                    metric_cols,
+                    raw_key,
+                    display_key,
+                )
+            _attach_xp_profile_archetypes(eligible_rows)
+        for row in rows:
+            if not row.get("xp_profile_bars_eligible"):
+                _clear_xp_profile_bar_scores(row)
 
 
 def _xp_pass_rating_shrink_sample(feature_key: str, player: dict) -> float:
