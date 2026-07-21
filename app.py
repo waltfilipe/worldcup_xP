@@ -8955,16 +8955,16 @@ def render_presentation_tab(
         '<div class="pres-cards-4">'
         '<div class="pres-tile pres-dim">'
         '<span class="pres-icon"><i class="fa-solid fa-chart-simple"></i></span>'
-        "<h5>Impacto Geral</h5><p>Com que frequência gera valor.</p></div>"
+        "<h5>Impacto Geral</h5><p>xP gerado por jogo.</p></div>"
         '<div class="pres-tile pres-dim">'
         '<span class="pres-icon"><i class="fa-solid fa-bolt"></i></span>'
-        "<h5>Impacto por ação</h5><p>Quanto cada passe rende.</p></div>"
+        "<h5>Impacto por ação</h5><p>xP médio por passe.</p></div>"
         '<div class="pres-tile pres-dim">'
         '<span class="pres-icon"><i class="fa-solid fa-bullseye"></i></span>'
-        "<h5>Entrega vs Esperado</h5><p>Entrega além do previsto.</p></div>"
+        "<h5>Entrega vs Esperado</h5><p>Resíduo mediano acima do esperado.</p></div>"
         '<div class="pres-tile pres-dim">'
         '<span class="pres-icon"><i class="fa-solid fa-wave-square"></i></span>'
-        "<h5>Consistência</h5><p>Mantém o nível entre jogos.</p></div>"
+        "<h5>Consistência</h5><p>Estabilidade entre jogos.</p></div>"
         "</div>",
         unsafe_allow_html=True,
     )

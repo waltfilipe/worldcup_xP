@@ -572,22 +572,10 @@ XP_PROFILE_BAR_LABELS: dict[str, str] = {
 }
 
 XP_PROFILE_BAR_METRICS: dict[str, tuple[str, ...]] = {
-    "xp_activity_display": (
-        "xp_per_90",
-        "threat_passes_p90",
-    ),
-    "xp_edge_display": (
-        "xp_m4_per_pass",
-        "xp_m4_per_threat_pass",
-    ),
-    "xp_quality_display": (
-        "xp_residual_median",
-        "xp_surprise_rate",
-    ),
-    "xp_consistency_display": (
-        "xp_game_std_adj_score",
-        "xp_games_above_median_pct",
-    ),
+    "xp_activity_display": ("xp_per_90",),
+    "xp_edge_display": ("xp_m4_per_pass",),
+    "xp_quality_display": ("xp_residual_median",),
+    "xp_consistency_display": ("xp_game_std_adj_score",),
 }
 
 # Player Analysis compare panel.
@@ -631,24 +619,10 @@ XP_COMPARE_METRIC_TOOLTIPS: dict[str, str] = {
 }
 
 XP_PROFILE_BAR_TOOLTIPS: dict[str, str] = {
-    "xp_activity_display": (
-        "Média do rank na posição de xP/jogo e ações de impacto/jogo — "
-        "com que frequência participa gerando valor. "
-        f"Comparado apenas entre jogadores com &gt;{int(XP_PROFILE_MIN_MINUTES_PCT * 100)}% "
-        f"dos minutos e volume ≥ P{XP_PROFILE_BAR_PASS_PERCENTILE} de passes na posição."
-    ),
-    "xp_edge_display": (
-        "Média do rank na posição de xP/passe e xP/ação de impacto — "
-        "quanto valor cada ação rende."
-    ),
-    "xp_quality_display": (
-        "Média do rank na posição do ganho típico e da frequência de passes "
-        "acima do valor esperado — se entrega mais do que a situação previa."
-    ),
-    "xp_consistency_display": (
-        "Média do rank na posição da estabilidade entre jogos e da frequência "
-        "de jogos fortes — se mantém o nível de partida para partida."
-    ),
+    "xp_activity_display": "xP total gerado por jogo.",
+    "xp_edge_display": "xP médio de cada passe completado.",
+    "xp_quality_display": "Quanto o jogador entrega acima do valor esperado pelo modelo.",
+    "xp_consistency_display": "Quão estável é o xP de jogo para jogo.",
 }
 
 XP_PROFILE_ARCHETYPE_KEYS: tuple[str, ...] = (
@@ -715,14 +689,8 @@ XP_PROFILE_ARCHETYPE_ICONS: dict[str, str] = {
 
 XP_PROFILE_ARCHETYPE_FILTER_ALL = ""
 
-ACTIVITY_METRICS: tuple[str, ...] = (
-    "xp_per_90",
-    "threat_passes_p90",
-)
-EDGE_METRICS: tuple[str, ...] = (
-    "xp_m4_per_pass",
-    "xp_m4_per_threat_pass",
-)
+ACTIVITY_METRICS: tuple[str, ...] = ("xp_per_90",)
+EDGE_METRICS: tuple[str, ...] = ("xp_m4_per_pass",)
 
 XP_PASS_RATING_FEATURES: tuple[str, ...] = (
     "xp_m4_per_pass",
@@ -769,14 +737,8 @@ FINISHER_METRICS: tuple[str, ...] = (
     "xp_cross_total",
     "special_cross_p90",
 )
-QUALITY_METRICS: tuple[str, ...] = (
-    "xp_residual_median",
-    "xp_surprise_rate",
-)
-CONSISTENCY_METRICS: tuple[str, ...] = (
-    "xp_game_std_adj_score",
-    "xp_games_above_median_pct",
-)
+QUALITY_METRICS: tuple[str, ...] = ("xp_residual_median",)
+CONSISTENCY_METRICS: tuple[str, ...] = ("xp_game_std_adj_score",)
 CONSISTENCY_INVERT_METRICS: tuple[str, ...] = ()
 
 XP_PROFILE_BAR_SPECS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
