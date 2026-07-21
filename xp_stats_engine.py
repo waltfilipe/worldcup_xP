@@ -41,6 +41,7 @@ BANDS = xse.DISTANCE_BAND_ORDER
 DISTANCE_INDEX_MIN_PASS_PERCENTILE = 30
 XP_PROFILE_MIN_MINUTES_PCT = 0.30
 XP_PROFILE_BAR_PASS_PERCENTILE = DISTANCE_INDEX_MIN_PASS_PERCENTILE
+XP_PROFILE_TOP_PASS_POOL_SIZE = 100
 
 DISTANCE_INDEX_GRADES: tuple[tuple[str, float], ...] = (
     ("Good", 0.20),
@@ -1333,20 +1334,86 @@ def is_xp_profile_bar_eligible(
     return float(player.get("passes_completed") or 0.0) >= min_passes
 
 
+def _xp_profile_passes_base_eligible(
+    player: dict,
+    pass_thresholds: dict[str, float],
+) -> bool:
+    return is_xp_profile_bar_eligible(player, pass_thresholds)
+
+
+def _attach_xp_profile_bar_eligibility_for_pool(rows: list[dict]) -> list[dict]:
+    """Flag profile-bar eligibility within one position group.
+
+    Base filter: minutes > 30% and passes >= P30.
+    When at least 100 players pass the base filter, keep only the top 100 by passes.
+    Otherwise keep everyone who passes the base filter.
+    """
+    if not rows:
+        return []
+
+    pass_thresholds = xp_profile_bar_pass_thresholds(rows)
+    group = str(rows[0].get("position_group") or "CM")
+    p30_threshold = round(float(pass_thresholds.get(group, 0.0)), 1)
+    base_eligible = [
+        row for row in rows
+        if _xp_profile_passes_base_eligible(row, pass_thresholds)
+    ]
+    use_top_pool = len(base_eligible) >= XP_PROFILE_TOP_PASS_POOL_SIZE
+
+    if use_top_pool:
+        top_pool = sorted(
+            base_eligible,
+            key=lambda row: float(row.get("passes_completed") or 0.0),
+            reverse=True,
+        )[:XP_PROFILE_TOP_PASS_POOL_SIZE]
+        eligible_ids = {id(row) for row in top_pool}
+        top_cutoff = round(float(top_pool[-1].get("passes_completed") or 0.0), 1)
+    else:
+        eligible_ids = {id(row) for row in base_eligible}
+        top_cutoff = p30_threshold
+
+    for row in rows:
+        row["xp_profile_p30_min_passes"] = p30_threshold
+        row["xp_profile_min_minutes_pct"] = XP_PROFILE_MIN_MINUTES_PCT
+        row["xp_profile_eligibility_mode"] = "top100" if use_top_pool else "threshold"
+        if use_top_pool:
+            row["xp_profile_top_pool_size"] = XP_PROFILE_TOP_PASS_POOL_SIZE
+            row["xp_profile_min_passes"] = top_cutoff
+        else:
+            row.pop("xp_profile_top_pool_size", None)
+            row["xp_profile_min_passes"] = p30_threshold
+
+        minutes_ok = (
+            row.get("minutes_pct") is not None
+            and float(row.get("minutes_pct") or 0) > XP_PROFILE_MIN_MINUTES_PCT
+        )
+        passes_p30_ok = float(row.get("passes_completed") or 0.0) >= p30_threshold
+        in_top = id(row) in eligible_ids
+        row["xp_profile_bars_eligible"] = in_top
+
+        if in_top:
+            row.pop("xp_profile_ineligible_reason", None)
+        elif not minutes_ok:
+            row["xp_profile_ineligible_reason"] = "minutes"
+        elif not passes_p30_ok:
+            row["xp_profile_ineligible_reason"] = "passes_p30"
+        elif use_top_pool:
+            row["xp_profile_ineligible_reason"] = "top100_cutoff"
+        else:
+            row["xp_profile_ineligible_reason"] = "passes_p30"
+
+    return [row for row in rows if row.get("xp_profile_bars_eligible")]
+
+
 def attach_xp_profile_bar_eligibility(players: list[dict]) -> None:
-    """Flag players who meet minutes (>30%) and P30 pass-volume thresholds."""
+    """Flag players who meet profile-bar eligibility within each position group."""
     pools: dict[str, list[dict]] = {}
     for player in players:
         group = str(player.get("position_group") or "CM")
         pools.setdefault(group, []).append(player)
 
     for rows in pools.values():
-        pass_thresholds = xp_profile_bar_pass_thresholds(rows)
-        for row in rows:
-            group = str(row.get("position_group") or "CM")
-            row["xp_profile_min_passes"] = round(float(pass_thresholds.get(group, 0.0)), 1)
-            row["xp_profile_min_minutes_pct"] = XP_PROFILE_MIN_MINUTES_PCT
-            row["xp_profile_bars_eligible"] = is_xp_profile_bar_eligible(row, pass_thresholds)
+        _attach_xp_profile_bar_eligibility_for_pool(rows)
 
 
 def attach_composite_indices(players: list[dict]) -> None:
@@ -1362,14 +1429,7 @@ def attach_composite_indices(players: list[dict]) -> None:
         _attach_game_std_adjusted(rows)
         df = pd.DataFrame(rows)
         position_group = str(rows[0].get("position_group") or "")
-        pass_thresholds = xp_profile_bar_pass_thresholds(rows)
-        for row in rows:
-            group = str(row.get("position_group") or "CM")
-            row["xp_profile_min_passes"] = round(float(pass_thresholds.get(group, 0.0)), 1)
-            row["xp_profile_min_minutes_pct"] = XP_PROFILE_MIN_MINUTES_PCT
-            row["xp_profile_bars_eligible"] = is_xp_profile_bar_eligible(row, pass_thresholds)
-
-        eligible_rows = [row for row in rows if row.get("xp_profile_bars_eligible")]
+        eligible_rows = _attach_xp_profile_bar_eligibility_for_pool(rows)
         builder_cols = list(BUILDER_BASE_METRICS)
         if position_group == "fullbacks":
             builder_cols.extend(BUILDER_FB_METRICS)
@@ -1389,7 +1449,7 @@ def attach_composite_indices(players: list[dict]) -> None:
         for raw_key, composite in composites.items():
             _attach_index_display_scores(rows, raw_key, display_map[raw_key], composite)
 
-        # Profile bars: rank only among eligible peers (minutes > 30%, passes >= P30).
+        # Profile bars: rank only among eligible peers (base filters, or top 100 by passes).
         if eligible_rows:
             for raw_key, display_key, metric_cols in XP_PROFILE_BAR_SPECS:
                 _attach_median_rank_display_scores(

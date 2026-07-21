@@ -6347,17 +6347,33 @@ def _xp_profile_dim_html(display_key: str, xp_profile: dict) -> str:
     )
 
 
+def _xp_profile_ineligibility_note(xp_profile: dict) -> str:
+    min_pct = float(xp_profile.get("xp_profile_min_minutes_pct") or xstats.XP_PROFILE_MIN_MINUTES_PCT)
+    reason = str(xp_profile.get("xp_profile_ineligible_reason") or "")
+    if reason == "top100_cutoff":
+        pool_size = int(xp_profile.get("xp_profile_top_pool_size") or xstats.XP_PROFILE_TOP_PASS_POOL_SIZE)
+        min_passes = xp_profile.get("xp_profile_min_passes")
+        passes_txt = f"{float(min_passes):.0f}" if min_passes is not None else "—"
+        return (
+            f"Perfil xP indisponível — requer &gt;{min_pct * 100:.0f}% dos minutos e "
+            f"estar entre os {pool_size} com mais passes na posição "
+            f"(mín. {passes_txt} passes)."
+        )
+    p30_min = xp_profile.get("xp_profile_p30_min_passes", xp_profile.get("xp_profile_min_passes"))
+    passes_txt = f"{float(p30_min):.0f}" if p30_min is not None else "P30"
+    return (
+        f"Perfil xP indisponível — requer &gt;{min_pct * 100:.0f}% dos minutos "
+        f"e ≥{passes_txt} passes completados (P{xstats.XP_PROFILE_BAR_PASS_PERCENTILE} na posição)."
+    )
+
+
 def _xp_profile_bars_html(xp_profile: dict | None) -> str:
     if not xp_profile:
         return ""
     if not xp_profile.get("xp_profile_bars_eligible", True):
-        min_pct = float(xp_profile.get("xp_profile_min_minutes_pct") or xstats.XP_PROFILE_MIN_MINUTES_PCT)
-        min_passes = xp_profile.get("xp_profile_min_passes")
-        passes_txt = f"{float(min_passes):.0f}" if min_passes is not None else "P30"
         note = (
             '<p class="pa-xp-profile-eligibility-note">'
-            f"Perfil xP indisponível — requer &gt;{min_pct * 100:.0f}% dos minutos "
-            f"e ≥{passes_txt} passes completados (P{xstats.XP_PROFILE_BAR_PASS_PERCENTILE} na posição)."
+            f"{_xp_profile_ineligibility_note(xp_profile)}"
             "</p>"
         )
         return f'<div class="pa-xp-profile-bars pa-xp-profile-bars-ineligible">{note}</div>'
