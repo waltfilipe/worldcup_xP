@@ -49,15 +49,15 @@ XT_MAP_REF_WIDTH = 7.8
 XT_MAP_COLOR_PERCENTILE = (5.0, 95.0)
 
 # Profile origin heatmap — footer band for direction-of-attack chrome.
-PROFILE_FOOTER_FRAC = 0.16
+PROFILE_FOOTER_FRAC = 0.17
 PROFILE_ATTACK_ARROW_COLOR = "#94a3b8"
 PROFILE_ATTACK_LABEL_COLOR = "#94a3b8"
-PROFILE_ATTACK_ARROW_SPAN_RATIO = 0.14
-PROFILE_ATTACK_ARROW_Y_OFFSET = 0.018
-PROFILE_ATTACK_LABEL_Y_OFFSET = 0.040
-PROFILE_ATTACK_MUTATION = 9.5
-PROFILE_ATTACK_LW = 1.25
-PROFILE_ATTACK_LABEL_FONT = 6.4
+PROFILE_ATTACK_ARROW_SPAN_FIG = 0.050
+PROFILE_ATTACK_ARROW_Y_RATIO = 0.58
+PROFILE_ATTACK_LABEL_Y_RATIO = 0.24
+PROFILE_ATTACK_MUTATION = 10.5
+PROFILE_ATTACK_LW = 1.35
+PROFILE_ATTACK_LABEL_FONT = 6.6
 
 
 def _resolve_figsize(
@@ -135,12 +135,12 @@ def _attack_arrow(fig, *, fig_w: float, has_cbar: bool = False, dashboard: bool 
 
 
 def _profile_attack_arrow(fig, ax) -> None:
-    """Centered direction-of-attack arrow below the profile pitch footprint."""
+    """Centered direction-of-attack arrow in the footer band below the pitch."""
     pos = ax.get_position()
     center_x = pos.x0 + pos.width * 0.5
-    half_span = pos.width * PROFILE_ATTACK_ARROW_SPAN_RATIO
-    arrow_y = pos.y0 - PROFILE_ATTACK_ARROW_Y_OFFSET
-    label_y = pos.y0 - PROFILE_ATTACK_LABEL_Y_OFFSET
+    half_span = PROFILE_ATTACK_ARROW_SPAN_FIG * min(pos.width / 0.92, 1.08)
+    arrow_y = PROFILE_FOOTER_FRAC * PROFILE_ATTACK_ARROW_Y_RATIO
+    label_y = PROFILE_FOOTER_FRAC * PROFILE_ATTACK_LABEL_Y_RATIO
 
     fig.patches.append(
         FancyArrowPatch(
@@ -161,7 +161,7 @@ def _profile_attack_arrow(fig, ax) -> None:
         label_y,
         "Direction of Attack",
         ha="center",
-        va="top",
+        va="center",
         transform=fig.transFigure,
         fontsize=PROFILE_ATTACK_LABEL_FONT,
         color=PROFILE_ATTACK_LABEL_COLOR,
@@ -710,8 +710,6 @@ def draw_action_origin_smooth_heatmap(
     else:
         ax.set_title("")
         fig.subplots_adjust(left=0.0, right=1.0, top=0.98, bottom=PROFILE_FOOTER_FRAC)
-        pos = ax.get_position()
-        ax.set_position([pos.x0, pos.y0 + 0.02, pos.width, pos.height * 0.94])
         _profile_attack_arrow(fig, ax)
     ax.set_axis_off()
     return fig
