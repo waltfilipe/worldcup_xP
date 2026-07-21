@@ -2081,54 +2081,32 @@ st.markdown(
         font-style: italic;
         font-weight: 500;
     }
-    .pres-calc-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.7rem;
-        margin-top: 0.85rem;
-    }
-    @media (max-width: 900px) {
-        .pres-calc-grid { grid-template-columns: 1fr; }
-    }
-    .pres-calc-step {
-        position: relative;
+    .pres-calc-list {
+        list-style: none;
+        margin: 0.5rem 0 0 0;
+        padding: 0;
         display: flex;
-        align-items: flex-start;
-        gap: 0.8rem;
-        padding: 0.85rem 0.95rem;
-        border-radius: 12px;
-        background: rgba(23, 32, 53, 0.55);
-        border: 1px solid #253150;
-        transition: border-color 0.15s ease, transform 0.15s ease;
+        flex-direction: column;
+        gap: 0.45rem;
     }
-    .pres-calc-step:hover { border-color: #3b82f6; transform: translateY(-2px); }
-    .pres-calc-num {
-        flex: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 1.9rem;
-        height: 1.9rem;
-        border-radius: 9px;
-        font-size: 0.9rem;
-        font-weight: 700;
-        color: #dbeafe;
-        background: rgba(59, 130, 246, 0.16);
-        border: 1px solid rgba(96, 165, 250, 0.4);
-    }
-    .pres-calc-body { display: flex; flex-direction: column; gap: 0.15rem; }
-    .pres-calc-body h5 {
-        margin: 0;
-        color: #f1f5f9;
-        font-size: 0.9rem;
-        font-weight: 600;
-    }
-    .pres-calc-body p {
-        margin: 0;
+    .pres-calc-list li {
+        position: relative;
+        padding-left: 1.3rem;
         color: #94a3b8;
-        font-size: 0.83rem;
-        line-height: 1.45;
+        font-size: 0.87rem;
+        line-height: 1.5;
     }
+    .pres-calc-list li::before {
+        content: "";
+        position: absolute;
+        left: 0.1rem;
+        top: 0.6rem;
+        width: 0.4rem;
+        height: 0.4rem;
+        border-radius: 50%;
+        background: #60a5fa;
+    }
+    .pres-calc-list strong { color: #e2e8f0; font-weight: 600; }
     .pres-about-card {
         display: flex;
         align-items: flex-start;
@@ -8948,24 +8926,12 @@ def render_presentation_tab(
     st.markdown(
         '<div class="pres-card">'
         "<h4>Como o xP é calculado</h4>"
-        "<div class='pres-calc-grid'>"
-        "<div class='pres-calc-step'>"
-        "<span class='pres-calc-num'>1</span>"
-        "<div class='pres-calc-body'><h5>Campo em células</h5>"
-        "<p>O campo é dividido em grades 12×8 de origem e 12×8 de destino.</p></div></div>"
-        "<div class='pres-calc-step'>"
-        "<span class='pres-calc-num'>2</span>"
-        "<div class='pres-calc-body'><h5>Referência global</h5>"
-        "<p>Raridade medida no pool de 900k+ passes.</p></div></div>"
-        "<div class='pres-calc-step'>"
-        "<span class='pres-calc-num'>3</span>"
-        "<div class='pres-calc-body'><h5>Progressão</h5>"
-        "<p>Avanço ao gol aumenta o valor; recuo e troca lateral reduzem.</p></div></div>"
-        "<div class='pres-calc-step'>"
-        "<span class='pres-calc-num'>4</span>"
-        "<div class='pres-calc-body'><h5>Acessibilidade</h5>"
-        "<p>Passes curtos e fáceis no setor defensivo são descontados.</p></div></div>"
-        "</div>"
+        "<ul class='pres-calc-list'>"
+        "<li><strong>Campo em células</strong> — grades 12×8 de origem e destino.</li>"
+        "<li><strong>Referência global</strong> — raridade medida no pool de 900k+ passes.</li>"
+        "<li><strong>Progressão</strong> — avanço ao gol aumenta; recuo e lateral reduzem.</li>"
+        "<li><strong>Acessibilidade</strong> — passes fáceis no setor defensivo são descontados.</li>"
+        "</ul>"
         "</div>",
         unsafe_allow_html=True,
     )
