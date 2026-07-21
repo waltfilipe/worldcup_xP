@@ -693,10 +693,8 @@ ACTIVITY_METRICS: tuple[str, ...] = ("xp_per_90",)
 EDGE_METRICS: tuple[str, ...] = ("xp_m4_per_pass",)
 
 XP_PASS_RATING_FEATURES: tuple[str, ...] = (
-    "xp_m4_per_pass",
-    "xp_m4_per_threat_pass",
     "xp_per_90",
-    "threat_passes_p90",
+    "xp_m4_per_pass",
     "xp_residual_median",
     "xp_game_std_adj_score",
 )
@@ -1414,9 +1412,10 @@ def xp_pass_rating_percentile_display(rank: int, pool_size: int) -> float:
 
 
 def attach_xp_pass_ratings(players: list[dict]) -> None:
-    """Attach xP pass rating (6-axis PCA + shrinkage) with percentile display.
+    """Attach xP pass rating (4-axis PCA + shrinkage) with percentile display.
 
-    PC1 combines within-position z-scores of core xP metrics. Players are ranked
+    PC1 combines within-position z-scores of the four xP profile dimensions
+    (Impacto Geral, Impacto por ação, Entrega vs Esperado, Consistência). Players are ranked
     by the confidence-adjusted internal composite; the displayed grade maps that
     rank to a 4.5–9.0 scale (top 10% -> 8–9, 10–30% -> 7–8, rest -> 4.5–7).
     """
