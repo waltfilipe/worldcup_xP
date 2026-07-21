@@ -371,6 +371,7 @@ def compute_extended_xp_stats(grp: pd.DataFrame) -> dict[str, float | int]:
         "passes_final_third": final_third_count,
         "xp_box_share": _sum_xp(masks["in_box"], xp) / xp_total if xp_total > 0 else 0.0,
         "xp_from_deep": _sum_xp(masks["from_deep"], xp),
+        "xp_from_deep_share": _sum_xp(masks["from_deep"], xp) / xp_total if xp_total > 0 else 0.0,
         "xp_max_pass": float(xp.max()) if n else 0.0,
         "xp_pass_std": float(xp.std()) if n > 1 else 0.0,
         "xp_pass_cv": float(xp.std() / xp.mean()) if n > 1 and xp.mean() > 0 else 0.0,
@@ -557,7 +558,14 @@ XP_ARCHETYPE_RADAR_LABELS: dict[str, str] = {
     "xp_archetype_finisher_display": "Finisher-pass",
 }
 
+# Rendered profile bars (main gradient bar + sub-bars per metric).
 XP_PROFILE_BAR_KEYS: tuple[str, ...] = (
+    "xp_activity_display",
+    "xp_edge_display",
+)
+
+# Axes used only to classify the xP profile archetype (not all are rendered).
+XP_ARCHETYPE_AXIS_KEYS: tuple[str, ...] = (
     "xp_activity_display",
     "xp_edge_display",
     "xp_quality_display",
@@ -566,16 +574,46 @@ XP_PROFILE_BAR_KEYS: tuple[str, ...] = (
 
 XP_PROFILE_BAR_LABELS: dict[str, str] = {
     "xp_activity_display": "Impacto Geral",
-    "xp_edge_display": "Impacto por ação",
+    "xp_edge_display": "Impacto por Passe",
     "xp_quality_display": "Entrega vs Esperado",
     "xp_consistency_display": "Consistência",
 }
 
 XP_PROFILE_BAR_METRICS: dict[str, tuple[str, ...]] = {
-    "xp_activity_display": ("xp_per_90",),
-    "xp_edge_display": ("xp_m4_per_pass",),
+    "xp_activity_display": ("xp_per_90", "threat_passes_p90"),
+    "xp_edge_display": ("xp_m4_per_pass", "xp_m4_per_threat_pass"),
     "xp_quality_display": ("xp_residual_median",),
     "xp_consistency_display": ("xp_game_std_adj_score",),
+}
+
+# Individual metrics that get their own sub-bar under each rendered profile bar.
+XP_PROFILE_SUBMETRICS: tuple[str, ...] = (
+    "xp_per_90",
+    "threat_passes_p90",
+    "xp_m4_per_pass",
+    "xp_m4_per_threat_pass",
+)
+
+# Secondary indices shown as coloured status boxes below the regular stats.
+# (index_key, label, metrics, invert_metrics)
+XP_INDEX_SPECS: tuple[tuple[str, str, tuple[str, ...], tuple[str, ...]], ...] = (
+    ("xp_idx_surprise", "Surpresa", ("xp_residual_median",), ()),
+    ("xp_idx_consistency", "Consistência", ("xp_game_std_adj_score",), ()),
+    ("xp_idx_creative", "Criativo", ("xp_final_third_share", "xp_box_share"), ()),
+    ("xp_idx_builder", "Construtor", ("xp_from_deep_share", "xp_line_break_total"), ()),
+)
+
+XP_INDEX_TIER_LABELS: dict[str, str] = {
+    "below": "Abaixo da média",
+    "mid": "Mediano",
+    "above": "Acima da média",
+}
+
+XP_INDEX_TOOLTIPS: dict[str, str] = {
+    "xp_idx_surprise": "Quanto o jogador entrega acima do valor esperado pelo modelo (resíduo mediano).",
+    "xp_idx_consistency": "Estabilidade do xP de jogo para jogo.",
+    "xp_idx_creative": "Volume de xP criado no terço final e na área.",
+    "xp_idx_builder": "Construção a partir do campo defensivo e passes que quebram linhas.",
 }
 
 # Player Analysis compare panel.
@@ -619,8 +657,8 @@ XP_COMPARE_METRIC_TOOLTIPS: dict[str, str] = {
 }
 
 XP_PROFILE_BAR_TOOLTIPS: dict[str, str] = {
-    "xp_activity_display": "xP total gerado por jogo.",
-    "xp_edge_display": "xP médio de cada passe completado.",
+    "xp_activity_display": "Impacto ofensivo por jogo: xP gerado e passes threat produzidos.",
+    "xp_edge_display": "Valor por passe: xP médio por passe e por passe threat.",
     "xp_quality_display": "Quanto o jogador entrega acima do valor esperado pelo modelo.",
     "xp_consistency_display": "Quão estável é o xP de jogo para jogo.",
 }
@@ -689,14 +727,15 @@ XP_PROFILE_ARCHETYPE_ICONS: dict[str, str] = {
 
 XP_PROFILE_ARCHETYPE_FILTER_ALL = ""
 
-ACTIVITY_METRICS: tuple[str, ...] = ("xp_per_90",)
-EDGE_METRICS: tuple[str, ...] = ("xp_m4_per_pass",)
+ACTIVITY_METRICS: tuple[str, ...] = ("xp_per_90", "threat_passes_p90")
+EDGE_METRICS: tuple[str, ...] = ("xp_m4_per_pass", "xp_m4_per_threat_pass")
 
+# Grade uses only Impacto Geral (IG) and Impacto por Passe (IpP) inputs.
 XP_PASS_RATING_FEATURES: tuple[str, ...] = (
     "xp_per_90",
+    "threat_passes_p90",
     "xp_m4_per_pass",
-    "xp_residual_median",
-    "xp_game_std_adj_score",
+    "xp_m4_per_threat_pass",
 )
 XP_PASS_RATING_TANH_SCALE = 1.25
 XP_PASS_RATING_TANH_AMPLITUDE = 1.15
@@ -1194,7 +1233,7 @@ def _attach_game_std_adjusted(rows: list[dict]) -> None:
 
 def _xp_profile_axis_medians(rows: list[dict]) -> dict[str, float]:
     medians: dict[str, float] = {}
-    for key in XP_PROFILE_BAR_KEYS:
+    for key in XP_ARCHETYPE_AXIS_KEYS:
         values = [
             float(row[key])
             for row in rows
@@ -1210,14 +1249,14 @@ def classify_xp_profile_archetype(
 ) -> str:
     """Classify a player into one of six xP profile archetypes (within position)."""
     scores: dict[str, float] = {}
-    for key in XP_PROFILE_BAR_KEYS:
+    for key in XP_ARCHETYPE_AXIS_KEYS:
         raw = row.get(key)
         if raw is None or not np.isfinite(float(raw)):
             return "regular"
         scores[key] = float(raw)
 
-    below = {key: scores[key] < medians[key] for key in XP_PROFILE_BAR_KEYS}
-    above = {key: scores[key] > medians[key] for key in XP_PROFILE_BAR_KEYS}
+    below = {key: scores[key] < medians[key] for key in XP_ARCHETYPE_AXIS_KEYS}
+    above = {key: scores[key] > medians[key] for key in XP_ARCHETYPE_AXIS_KEYS}
 
     volume = "xp_activity_display"
     effectiveness = "xp_edge_display"
@@ -1254,6 +1293,14 @@ def _clear_xp_profile_bar_scores(row: dict) -> None:
         row[raw_key] = None
         row.pop(f"{raw_key}_rank_in_group", None)
         row.pop(f"{raw_key}_rank_pool_in_group", None)
+    for metric in XP_PROFILE_SUBMETRICS:
+        row[f"{metric}_sub_display"] = None
+        row.pop(f"{metric}_sub_index", None)
+        row.pop(f"{metric}_sub_index_rank_in_group", None)
+        row.pop(f"{metric}_sub_index_rank_pool_in_group", None)
+    for idx_key, _lbl, _metrics, _inv in XP_INDEX_SPECS:
+        row.pop(idx_key, None)
+        row.pop(f"{idx_key}_tier", None)
     row.pop("xp_profile_archetype", None)
     row.pop("xp_profile_archetype_label", None)
     row.pop("xp_profile_archetype_description", None)
@@ -1351,10 +1398,39 @@ def attach_composite_indices(players: list[dict]) -> None:
                     raw_key,
                     display_key,
                 )
+            for metric in XP_PROFILE_SUBMETRICS:
+                _attach_median_rank_display_scores(
+                    eligible_rows,
+                    (metric,),
+                    f"{metric}_sub_index",
+                    f"{metric}_sub_display",
+                )
+            _attach_secondary_indices(eligible_rows)
             _attach_xp_profile_archetypes(eligible_rows)
         for row in rows:
             if not row.get("xp_profile_bars_eligible"):
                 _clear_xp_profile_bar_scores(row)
+
+
+def _attach_secondary_indices(eligible_rows: list[dict]) -> None:
+    """Attach z-composite indices and tercile tiers (below/mid/above) among eligible peers."""
+    if not eligible_rows:
+        return
+    edf = pd.DataFrame(eligible_rows)
+    pool = len(eligible_rows)
+    for idx_key, _label, metrics, invert in XP_INDEX_SPECS:
+        composite = _mean_z_columns(edf, metrics, invert=invert)
+        order = composite.rank(method="min", ascending=False)
+        for i, row in enumerate(eligible_rows):
+            row[idx_key] = float(composite.iloc[i])
+            pct = float(order.iloc[i]) / pool if pool else 1.0
+            if pct <= 1.0 / 3.0:
+                tier = "above"
+            elif pct <= 2.0 / 3.0:
+                tier = "mid"
+            else:
+                tier = "below"
+            row[f"{idx_key}_tier"] = tier
 
 
 def _xp_pass_rating_shrink_sample(feature_key: str, player: dict) -> float:

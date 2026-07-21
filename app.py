@@ -3724,6 +3724,120 @@ st.markdown(
     .pa-xp-profile-bars-ineligible {
         justify-content: center;
     }
+    .pa-xp-dim {
+        display: flex;
+        flex-direction: column;
+        gap: 0.34rem;
+    }
+    .pa-xp-subbars {
+        display: flex;
+        flex-direction: column;
+        gap: 0.22rem;
+        padding-left: 0.32rem;
+        margin-top: 0.05rem;
+    }
+    .pa-xp-subbar {
+        display: grid;
+        grid-template-columns: 4.9rem 1fr auto;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .pa-xp-subbar-label {
+        color: #94a3b8;
+        font-size: 0.66rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .pa-xp-subbar-track {
+        position: relative;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(51, 65, 85, 0.55);
+        overflow: hidden;
+    }
+    .pa-xp-subbar-fill {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        border-radius: 999px;
+        transition: width 0.3s ease;
+    }
+    .pa-xp-subbar-val {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.3rem;
+        color: #e2e8f0;
+        font-size: 0.68rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+    .pa-xp-subbar-rank {
+        color: #64748b;
+        font-size: 0.6rem;
+        font-weight: 600;
+    }
+    .pa-xp-index-wrap {
+        margin-top: 0.7rem;
+        padding-top: 0.6rem;
+        border-top: 1px solid rgba(51, 65, 85, 0.55);
+    }
+    .pa-xp-index-title {
+        margin: 0 0 0.42rem 0;
+        color: #93c5fd;
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+    .pa-xp-index-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.4rem;
+    }
+    .pa-xp-index-box {
+        display: flex;
+        flex-direction: column;
+        gap: 0.14rem;
+        padding: 0.42rem 0.55rem;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        background: rgba(15, 23, 42, 0.55);
+        cursor: help;
+        transition: transform 0.14s ease, border-color 0.14s ease;
+    }
+    .pa-xp-index-box:hover {
+        transform: translateY(-1px);
+    }
+    .pa-xp-index-name {
+        color: #e2e8f0;
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+    .pa-xp-index-tier {
+        font-size: 0.64rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+    }
+    .pa-xp-index-below {
+        border-color: rgba(251, 146, 60, 0.5);
+        background: linear-gradient(160deg, rgba(251, 146, 60, 0.16) 0%, rgba(15, 23, 42, 0.55) 100%);
+    }
+    .pa-xp-index-below .pa-xp-index-tier { color: #fb923c; }
+    .pa-xp-index-mid {
+        border-color: rgba(250, 204, 21, 0.5);
+        background: linear-gradient(160deg, rgba(250, 204, 21, 0.15) 0%, rgba(15, 23, 42, 0.55) 100%);
+    }
+    .pa-xp-index-mid .pa-xp-index-tier { color: #facc15; }
+    .pa-xp-index-above {
+        border-color: rgba(74, 222, 128, 0.5);
+        background: linear-gradient(160deg, rgba(74, 222, 128, 0.16) 0%, rgba(15, 23, 42, 0.55) 100%);
+    }
+    .pa-xp-index-above .pa-xp-index-tier { color: #4ade80; }
     .pa-xp-gradient-bar-row {
         display: flex;
         flex-direction: column;
@@ -6178,6 +6292,49 @@ def _xp_gradient_bar_row_html(label: str, display_key: str, xp_profile: dict) ->
     )
 
 
+def _xp_profile_subbar_html(xp_profile: dict, metric: str) -> str:
+    label = xstats.pa_stats_metric_label(metric)
+    value = xstats.format_pa_stats_value(metric, xp_profile.get(metric))
+    score = xp_profile.get(f"{metric}_sub_display")
+    rank = xp_profile.get(f"{metric}_sub_index_rank_in_group")
+    total = xp_profile.get(f"{metric}_sub_index_rank_pool_in_group")
+    try:
+        pct = max(4.0, min(100.0, (float(score) - 3.0) / 6.0 * 100.0))
+        color = score_display_color(float(score))
+    except (TypeError, ValueError):
+        pct = 0.0
+        color = "#475569"
+    rank_txt = f"#{int(rank)}/{int(total)}" if rank and total else ""
+    return (
+        '<div class="pa-xp-subbar">'
+        f'<span class="pa-xp-subbar-label">{html.escape(label)}</span>'
+        '<span class="pa-xp-subbar-track">'
+        f'<span class="pa-xp-subbar-fill" style="width:{pct:.0f}%;background:{color}"></span>'
+        "</span>"
+        '<span class="pa-xp-subbar-val">'
+        f"{html.escape(value)}"
+        f'<span class="pa-xp-subbar-rank">{html.escape(rank_txt)}</span>'
+        "</span>"
+        "</div>"
+    )
+
+
+def _xp_profile_dim_html(display_key: str, xp_profile: dict) -> str:
+    main_bar = _xp_gradient_bar_row_html(
+        xstats.XP_PROFILE_BAR_LABELS[display_key], display_key, xp_profile
+    )
+    subs = "".join(
+        _xp_profile_subbar_html(xp_profile, metric)
+        for metric in xstats.XP_PROFILE_BAR_METRICS.get(display_key, ())
+    )
+    return (
+        '<div class="pa-xp-dim">'
+        f"{main_bar}"
+        f'<div class="pa-xp-subbars">{subs}</div>'
+        "</div>"
+    )
+
+
 def _xp_profile_bars_html(xp_profile: dict | None) -> str:
     if not xp_profile:
         return ""
@@ -6193,10 +6350,36 @@ def _xp_profile_bars_html(xp_profile: dict | None) -> str:
         )
         return f'<div class="pa-xp-profile-bars pa-xp-profile-bars-ineligible">{note}</div>'
     rows = "".join(
-        _xp_gradient_bar_row_html(xstats.XP_PROFILE_BAR_LABELS[key], key, xp_profile)
+        _xp_profile_dim_html(key, xp_profile)
         for key in xstats.XP_PROFILE_BAR_KEYS
     )
     return f'<div class="pa-xp-profile-bars">{rows}</div>'
+
+
+def _xp_index_boxes_html(xp_profile: dict | None) -> str:
+    if not xp_profile or not xp_profile.get("xp_profile_bars_eligible", True):
+        return ""
+    boxes: list[str] = []
+    for idx_key, label, _metrics, _invert in xstats.XP_INDEX_SPECS:
+        tier = xp_profile.get(f"{idx_key}_tier")
+        if not tier:
+            continue
+        tier_label = xstats.XP_INDEX_TIER_LABELS.get(tier, "—")
+        tip = xstats.XP_INDEX_TOOLTIPS.get(idx_key, "")
+        boxes.append(
+            f'<div class="pa-xp-index-box pa-xp-index-{tier}" title="{html.escape(tip, quote=True)}">'
+            f'<span class="pa-xp-index-name">{html.escape(label)}</span>'
+            f'<span class="pa-xp-index-tier">{html.escape(tier_label)}</span>'
+            "</div>"
+        )
+    if not boxes:
+        return ""
+    return (
+        '<div class="pa-xp-index-wrap">'
+        '<div class="pa-xp-index-title">Índices xP</div>'
+        f'<div class="pa-xp-index-grid">{"".join(boxes)}</div>'
+        "</div>"
+    )
 
 
 def _xp_profile_archetype_html(xp_profile: dict | None, *, as_title: bool = False) -> str:
@@ -6602,10 +6785,12 @@ def _build_xp_stats_card_html(
     player: dict | None = None,
 ) -> str:
     regular_html = _pa_regular_stats_panel_html(player, xp_profile)
+    index_html = _xp_index_boxes_html(xp_profile)
     return (
         '<div class="player-card pa-pillars-card">'
         '<div class="pa-pillars-stack"><div class="pa-pillar-group">'
         f"{regular_html}"
+        f"{index_html}"
         "</div></div>"
         "</div>"
     )
