@@ -661,6 +661,7 @@ def draw_action_origin_smooth_heatmap(
         ax.set_title(title, color="white", fontsize=8.0, pad=5)
     else:
         ax.set_title("")
+        _attack_arrow(fig, fig_w=figsize[0], dashboard=True)
     ax.set_axis_off()
     return fig
 

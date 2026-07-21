@@ -6443,8 +6443,10 @@ def _pa_regular_stat_line_html(source: dict, metric_ranks: dict, key: str) -> st
     label = XP_PA_REGULAR_STAT_LABELS.get(key, key)
     label_html = html.escape(label)
     value = _pa_regular_stat_value(source, key)
-    badge = _pa_top_badge_html(metric_ranks.get(key))
     rank_info = _pa_regular_stat_rank_info(source, metric_ranks, key)
+    badge = _pa_top_badge_html(
+        {"rank": rank_info[0], "total": rank_info[1]} if rank_info else None
+    )
     value_html = _pa_regular_stat_value_tip_html(
         label,
         value,
