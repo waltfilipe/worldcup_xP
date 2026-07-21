@@ -3069,9 +3069,9 @@ st.markdown(
         flex-direction: column;
         flex: 1;
         min-height: 0;
-        padding: 0.55rem 0.65rem 0.7rem;
+        padding: 0.65rem 0.7rem 0.75rem;
         margin-bottom: 0;
-        gap: 0.35rem;
+        gap: 0.45rem;
         overflow: visible;
     }
     .pa-xp-profile-title {
@@ -3709,10 +3709,10 @@ st.markdown(
     .pa-xp-profile-bars {
         display: flex;
         flex-direction: column;
-        gap: 0.55rem;
-        padding-top: 0.15rem;
+        gap: 0.85rem;
+        padding-top: 0.1rem;
         flex: 1;
-        justify-content: space-evenly;
+        justify-content: flex-start;
         min-height: 0;
     }
     .pa-xp-profile-eligibility-note {
@@ -3727,24 +3727,32 @@ st.markdown(
     .pa-xp-dim {
         display: flex;
         flex-direction: column;
-        gap: 0.34rem;
+        gap: 0.42rem;
+        padding: 0.55rem 0.5rem 0.6rem;
+        border-radius: 12px;
+        background: linear-gradient(160deg, rgba(21, 27, 43, 0.55) 0%, rgba(15, 23, 42, 0.35) 100%);
+        border: 1px solid rgba(51, 65, 85, 0.45);
     }
     .pa-xp-subbars {
         display: flex;
         flex-direction: column;
-        gap: 0.22rem;
-        padding-left: 0.32rem;
-        margin-top: 0.05rem;
+        gap: 0.38rem;
+        padding: 0.5rem 0.45rem 0.42rem;
+        margin-top: 0.1rem;
+        border-radius: 9px;
+        background: rgba(10, 16, 30, 0.55);
+        border: 1px solid rgba(51, 65, 85, 0.35);
     }
     .pa-xp-subbar {
         display: grid;
-        grid-template-columns: 4.9rem 1fr auto;
+        grid-template-columns: 5.4rem 1fr auto;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.55rem;
+        min-height: 1.35rem;
     }
     .pa-xp-subbar-label {
-        color: #94a3b8;
-        font-size: 0.66rem;
+        color: #cbd5e1;
+        font-size: 0.72rem;
         font-weight: 600;
         letter-spacing: 0.01em;
         white-space: nowrap;
@@ -3753,10 +3761,11 @@ st.markdown(
     }
     .pa-xp-subbar-track {
         position: relative;
-        height: 6px;
+        height: 9px;
         border-radius: 999px;
-        background: rgba(51, 65, 85, 0.55);
+        background: rgba(30, 41, 59, 0.85);
         overflow: hidden;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
     }
     .pa-xp-subbar-fill {
         position: absolute;
@@ -3765,20 +3774,23 @@ st.markdown(
         height: 100%;
         border-radius: 999px;
         transition: width 0.3s ease;
+        box-shadow: 0 0 6px rgba(255, 255, 255, 0.08);
     }
     .pa-xp-subbar-val {
         display: inline-flex;
         align-items: baseline;
-        gap: 0.3rem;
-        color: #e2e8f0;
-        font-size: 0.68rem;
+        gap: 0.35rem;
+        color: #f1f5f9;
+        font-size: 0.74rem;
         font-weight: 700;
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
+        min-width: 4.8rem;
+        justify-content: flex-end;
     }
     .pa-xp-subbar-rank {
         color: #64748b;
-        font-size: 0.6rem;
+        font-size: 0.64rem;
         font-weight: 600;
     }
     .pa-xp-index-wrap {
@@ -3841,7 +3853,7 @@ st.markdown(
     .pa-xp-gradient-bar-row {
         display: flex;
         flex-direction: column;
-        gap: 0.38rem;
+        gap: 0.32rem;
     }
     .pa-xp-gradient-bar-head {
         display: flex;
@@ -3866,18 +3878,18 @@ st.markdown(
     }
     .pa-xp-gradient-bar-shell {
         position: relative;
-        padding: 0.42rem 0.5rem 0.48rem;
-        border-radius: 12px;
+        padding: 0.36rem 0.45rem 0.4rem;
+        border-radius: 10px;
         background: linear-gradient(180deg, rgba(15, 23, 42, 0.72) 0%, rgba(10, 16, 30, 0.9) 100%);
         border: 1px solid rgba(51, 65, 85, 0.75);
         box-shadow:
             inset 0 1px 0 rgba(255, 255, 255, 0.04),
-            0 8px 18px rgba(2, 6, 23, 0.28);
+            0 6px 14px rgba(2, 6, 23, 0.22);
     }
     .pa-xp-gradient-bar-track {
         position: relative;
         width: 100%;
-        height: 20px;
+        height: 17px;
         border-radius: 999px;
         overflow: visible;
         background: linear-gradient(
