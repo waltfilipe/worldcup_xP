@@ -2050,6 +2050,24 @@ st.markdown(
     }
     .pres-xp-calc-steps li { margin-bottom: 0.35rem; }
     .pres-xp-calc-steps strong { color: #e2e8f0; font-weight: 600; }
+    .pres-xp-calc-table {
+        width: 100%;
+        margin-top: 0.65rem;
+        border-collapse: collapse;
+        color: #94a3b8;
+        font-size: 0.86rem;
+        line-height: 1.55;
+    }
+    .pres-xp-calc-table td {
+        padding: 0.35rem 0.65rem 0.35rem 0;
+        vertical-align: top;
+    }
+    .pres-xp-calc-table td:first-child {
+        width: 9.5rem;
+        color: #e2e8f0;
+        font-weight: 600;
+        white-space: nowrap;
+    }
     .pres-feature-card {
         background: linear-gradient(160deg, #151b2b 0%, #101522 100%);
         border: 1px solid #2a3550;
@@ -8825,14 +8843,14 @@ def render_presentation_tab(
 
     st.markdown(
         '<div class="pres-card pres-card-hero">'
-        f"<h4>{html.escape(APP_NAME)} · valor esperado do passe (xP)</h4>"
-        "<p>O <strong>xP</strong> (<em>expected Pass</em>) mede o <strong>valor ofensivo de cada passe "
-        "completado</strong>, com base em <em>onde a bola chega</em> e em <em>quão incomum</em> é "
-        "aquela entrega no contexto da Copa do Mundo.</p>"
-        "<p style='margin-top:0.55rem'>Não é só “perigo no destino”: o modelo compara origem e destino "
-        "do passe com o padrão do torneio, premia avanços em direção ao gol e desconta entregas "
-        "rotineiras (curtas, laterais, no setor defensivo). "
-        f"As notas são sempre relativas a jogadores da mesma posição na {html.escape(APP_LEAGUE)}.</p>"
+        f"<h4>{html.escape(APP_NAME)} · xP</h4>"
+        "<p>O <em>xP (Expected Pass)</em> tem como objetivo definir um valor para cada passe "
+        "realizado por um atleta.</p>"
+        "<p style='margin-top:0.55rem'>Cada passe recebe uma nota conforme a raridade do par "
+        "<em>origem → destino</em> — ou seja, o quanto aquela combinação de zonas é incomum "
+        "em relação a mais de <em>900k</em> passes.</p>"
+        "<p style='margin-top:0.55rem'>O modelo também ajusta o valor pela progressão do passe "
+        "(se progride no campo) e pela acessibilidade do destino (destinos mais ou menos óbvios).</p>"
         "</div>",
         unsafe_allow_html=True,
     )
@@ -8840,21 +8858,17 @@ def render_presentation_tab(
     st.markdown(
         '<div class="pres-card">'
         "<h4>Como o xP é calculado</h4>"
-        "<p>Cada passe completado passa por quatro etapas — da geometria do campo à nota final:</p>"
-        "<ol class='pres-xp-calc-steps'>"
-        "<li><strong>Mapeamento espacial.</strong> O campo é dividido em células 12×8 (origem) e 12×8 "
-        "(destino). Cada passe vira um par origem → destino.</li>"
-        "<li><strong>Referência do torneio.</strong> Consultamos quantos passes semelhantes ocorreram na "
-        "Copa. Destinos raros e avançados recebem nota base mais alta — não medimos “perigo” de forma "
-        "absoluta, mas sim valor relativo ao que o torneio costuma produzir.</li>"
-        "<li><strong>Ajuste de progressão.</strong> Passes que avançam em direção ao gol ganham bônus; "
-        "recuos e trocas laterais perdem parte do valor, mesmo com destino tecnicamente avançado.</li>"
-        "<li><strong>Ajuste de acessibilidade.</strong> Entregas curtas e fáceis no setor defensivo são "
-        "descontadas — o xP recompensa passes que de fato mudam o estágio do ataque.</li>"
-        "</ol>"
-        "<p style='margin-top:0.65rem'>A nota de cada passe fica entre 0 e 1. Somamos (ou calculamos "
-        "médias e taxas) ao longo da temporada. Passes <em>threat</em> são os que superam o valor "
-        "esperado para aquele contexto — os mais valiosos do jogador.</p>"
+        "<table class='pres-xp-calc-table'>"
+        "<tbody>"
+        "<tr><td>Campo em células</td>"
+        "<td>O campo é dividido em grades 12×8 de origem e 12×8 de destino</td></tr>"
+        "<tr><td>Referência global</td>"
+        "<td>Raridade medida no pool de 900k+ passes</td></tr>"
+        "<tr><td>Progressão</td>"
+        "<td>Avanço ao gol aumenta o valor; recuo e troca lateral reduzem</td></tr>"
+        "<tr><td>Acessibilidade</td>"
+        "<td>Passes curtos e fáceis no setor defensivo são descontados</td></tr>"
+        "</tbody></table>"
         "</div>",
         unsafe_allow_html=True,
     )
