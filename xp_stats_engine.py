@@ -773,9 +773,9 @@ XP_PASS_RATING_PERCENTILE_BANDS: tuple[tuple[float, float, float], ...] = (
     (0.30, 8.0, 7.0),   # 10–30%
     (1.00, 7.0, 4.5),   # rest
 )
-XP_PASS_RATING_CONFIDENCE_WEIGHT = 0.35
-XP_PASS_RATING_CONFIDENCE_PASS_WEIGHT = 0.65
-XP_PASS_RATING_CONFIDENCE_MINUTES_WEIGHT = 0.35
+XP_PASS_RATING_CONFIDENCE_WEIGHT = 0.4
+XP_PASS_RATING_CONFIDENCE_PASS_WEIGHT = 0.5
+XP_PASS_RATING_CONFIDENCE_MINUTES_WEIGHT = 0.5
 
 BUILDER_BASE_METRICS: tuple[str, ...] = (
     "xp_line_break_total",
@@ -1603,7 +1603,7 @@ def attach_xp_pass_ratings(players: list[dict]) -> None:
     (Impacto Geral, Impacto por ação, Entrega vs Esperado, Consistência). Players are ranked
     by the raw PCA composite; the displayed grade maps that rank to a 4.5–9.0 scale
     (top 10% -> 8–9, 10–30% -> 7–8, rest -> 4.5–7) with a single light
-    confidence pull toward 6.0 (65% passes, 35% minutes).
+    confidence pull toward 6.0 (50% passes, 50% minutes).
     """
     if not players:
         return
