@@ -136,11 +136,11 @@ def draw_top_xp_passes_map(
         )
         pitch.scatter(
             row.x_start, row.y_start,
-            s=28, marker="o", color=color, edgecolors="white", linewidths=0.5, ax=ax, zorder=5,
+            s=16, marker="o", color=color, edgecolors="white", linewidths=0.4, ax=ax, zorder=5,
         )
         pitch.scatter(
             row.x_end, row.y_end,
-            s=36, marker="s", color=color, edgecolors="white", linewidths=0.5, ax=ax, zorder=6,
+            s=20, marker="s", color=color, edgecolors="white", linewidths=0.4, ax=ax, zorder=6,
         )
         ax.text(
             row.x_end, row.y_end + 2.5,
@@ -219,8 +219,8 @@ def _draw_passes_on_pitch(
             lw_scale = 1.0
 
         alpha = 0.98 if is_highlight else 0.9
-        origin_size = 52 if is_highlight else 28
-        dest_size = 64 if is_highlight else 36
+        origin_size = 34 if is_highlight else 16
+        dest_size = 42 if is_highlight else 20
         z_mark = 10 if is_highlight else 5
 
         _delicate_arrows(

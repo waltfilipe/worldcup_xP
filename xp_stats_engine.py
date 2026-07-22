@@ -182,10 +182,6 @@ MAPS_SPECIAL_PASS_OPTIONS: tuple[tuple[str, str], ...] = (
         "xp_threat_long",
         f"xP Threat Passes · Long ({DISTANCE_BAND_LABELS['long']})",
     ),
-    ("diagonal_long", "Diagonais Longas"),
-    ("line_break", "Passes Quebra Linha"),
-    ("inversion", "Inversões"),
-    ("cross", "Cruzamentos"),
 )
 MAPS_STAT_TYPE_OPTIONS: tuple[tuple[str, str], ...] = (
     ("regular", "Regular Stats"),
@@ -626,7 +622,6 @@ XP_PROFILE_SUBMETRICS: tuple[str, ...] = (
 # (index_key, label, metrics, invert_metrics)
 XP_INDEX_SPECS: tuple[tuple[str, str, tuple[str, ...], tuple[str, ...]], ...] = (
     ("xp_idx_consistency", "Consistência", ("xp_game_std_adj_score",), ()),
-    ("xp_idx_surprise", "Superação", ("xp_residual_median",), ()),
 )
 
 XP_INDEX_TIER_LABELS: dict[str, str] = {
@@ -636,8 +631,12 @@ XP_INDEX_TIER_LABELS: dict[str, str] = {
 }
 
 XP_INDEX_TOOLTIPS: dict[str, str] = {
-    "xp_idx_consistency": "Estabilidade do xP de jogo para jogo.",
-    "xp_idx_surprise": "Quanto o jogador entrega acima do valor esperado pelo modelo (resíduo mediano).",
+    "xp_idx_consistency": "Estabilidade do xP de jogo para jogo — quão constante é o desempenho do atleta.",
+}
+
+# Icons for the index rows (tier indices + badges) shown in the xP Profile card.
+XP_INDEX_ICONS: dict[str, str] = {
+    "xp_idx_consistency": "fa-wave-square",
 }
 
 # Achievement badges — earned when ranked in the top N among eligible peers on the
@@ -999,12 +998,7 @@ SCATTER_SPECIAL_METRIC_OPTIONS: tuple[tuple[str, str], ...] = (
     ("threat_passes_p90", "Ações de impacto / jogo"),
     ("xp_m4_per_pass", "xP / passe"),
     ("xp_m4_per_threat_pass", "xP / ação de impacto"),
-    ("xp_residual_median", "Resíduo mediano"),
     ("xp_game_std_adj_score", "Estabilidade"),
-    ("special_diagonal_long_p90", "Diagonais longas / jogo"),
-    ("special_line_break_p90", "Passes quebra-linha / jogo"),
-    ("special_inversion_p90", "Inversões / jogo"),
-    ("special_cross_p90", "Cruzamentos / jogo"),
 )
 SCATTER_STAT_TYPE_OPTIONS: tuple[tuple[str, str], ...] = (
     ("regular", "Regular Stats"),
@@ -1016,12 +1010,7 @@ SCATTER_METRIC_OPTIONS: tuple[tuple[str, str], ...] = (
 )
 SCATTER_METRIC_LABELS: dict[str, str] = dict(SCATTER_METRIC_OPTIONS)
 # Scatter axes that come from the special-pass family (flagged in the UI).
-SCATTER_SPECIAL_METRIC_KEYS: frozenset[str] = frozenset({
-    "special_diagonal_long_p90",
-    "special_line_break_p90",
-    "special_inversion_p90",
-    "special_cross_p90",
-})
+SCATTER_SPECIAL_METRIC_KEYS: frozenset[str] = frozenset()
 
 
 def iter_scatter_metric_options() -> tuple[tuple[str, str], ...]:

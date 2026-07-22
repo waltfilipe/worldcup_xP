@@ -427,24 +427,61 @@ def fmt_rating_percentile(player: dict) -> str:
 
 
 def _rating_badges_html(player: dict) -> str:
+    """Deprecated legacy badges (Versatile / Dual-Elite). Kept as no-op."""
+    return ""
+
+
+# xP profile achievement badges shown on the player identity card.
+# (key, label, icon, css_class, tooltip, earned_fn)
+_XP_IDENTITY_BADGES: tuple[tuple[str, str, str, str, str], ...] = (
+    (
+        "impact",
+        "Impacto",
+        "fa-bolt",
+        "impact",
+        "Destaque na posição em xP por jogo e em xP por passe.",
+    ),
+    (
+        "threat",
+        "Ameaça",
+        "fa-crosshairs",
+        "threat",
+        "Destaque na posição em passes threat por jogo e em xP por passe threat.",
+    ),
+    (
+        "consistency",
+        "Consistência",
+        "fa-wave-square",
+        "consistency",
+        "Consistência acima da média da posição — desempenho estável entre jogos.",
+    ),
+)
+
+
+def _xp_identity_badges_html(xp_profile: dict | None) -> str:
+    if not xp_profile or not xp_profile.get("xp_profile_bars_eligible", True):
+        return ""
+    earned_flags = {
+        "impact": bool(xp_profile.get("xp_badge_impact_earned")),
+        "threat": bool(xp_profile.get("xp_badge_threat_earned")),
+        "consistency": xp_profile.get("xp_idx_consistency_tier") == "above",
+    }
     badges: list[str] = []
-    if player.get("rating_pareto_badge"):
+    for key, label, icon, css_class, tip in _XP_IDENTITY_BADGES:
+        if not earned_flags.get(key):
+            continue
         badges.append(
             '<span class="rating-badge-tip">'
-            '<i class="fa-solid fa-layer-group rating-fa-badge versatile" aria-hidden="true"></i>'
-            '<span class="rating-tipbox">Versatile</span>'
+            f'<span class="pa-xp-achievement pa-xp-achievement-{css_class}">'
+            f'<i class="fa-solid {icon}" aria-hidden="true"></i>'
+            f"<span>{html.escape(label)}</span>"
             "</span>"
-        )
-    if player.get("rating_dual_elite_badge"):
-        badges.append(
-            '<span class="rating-badge-tip">'
-            '<i class="fa-solid fa-bolt rating-fa-badge dual-elite" aria-hidden="true"></i>'
-            '<span class="rating-tipbox">Elite in passes &amp; carries</span>'
+            f'<span class="rating-tipbox">{html.escape(tip)}</span>'
             "</span>"
         )
     if not badges:
         return ""
-    return f'<span class="rating-badge-row">{"".join(badges)}</span>'
+    return f'<span class="rating-badge-row pa-xp-achievement-row">{"".join(badges)}</span>'
 
 _PROGRESSION_RADAR_METRIC_LABELS: dict[str, str] = {
     "impact_passes_p90": "Thr P90",
@@ -3154,18 +3191,17 @@ st.markdown(
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
-        height: var(--pa-card-h);
         min-height: var(--pa-card-h);
-        max-height: var(--pa-card-h);
+        height: auto;
         overflow: visible;
         box-sizing: border-box;
     }
     .pa-xp-profile-card {
         display: flex;
         flex-direction: column;
-        flex: 1;
+        flex: 1 0 auto;
         min-height: 0;
-        padding: 0.65rem 0.7rem 0.75rem;
+        padding: 0.65rem 0.7rem 0.85rem;
         margin-bottom: 0;
         gap: 0.45rem;
         overflow: visible;
@@ -3184,10 +3220,9 @@ st.markdown(
         flex-direction: column;
         padding: 0.75rem 0.7rem 0.7rem;
         margin-bottom: 0;
-        height: var(--pa-card-h);
         min-height: var(--pa-card-h);
-        max-height: var(--pa-card-h);
-        overflow: hidden;
+        height: auto;
+        overflow: visible;
         box-sizing: border-box;
     }
     .grade-card-title-row {
@@ -3427,6 +3462,40 @@ st.markdown(
         display: inline-flex;
         flex-wrap: wrap;
         gap: 0.35rem;
+        margin-top: 0.4rem;
+    }
+    .pa-xp-achievement-row {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+    .pa-xp-achievement {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.32rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 999px;
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+    .pa-xp-achievement i { font-size: 0.66rem; }
+    .pa-xp-achievement-impact {
+        color: #fcd34d;
+        background: rgba(250, 204, 21, 0.14);
+        border-color: rgba(250, 204, 21, 0.45);
+    }
+    .pa-xp-achievement-threat {
+        color: #fca5a5;
+        background: rgba(239, 68, 68, 0.14);
+        border-color: rgba(239, 68, 68, 0.45);
+    }
+    .pa-xp-achievement-consistency {
+        color: #7dd3fc;
+        background: rgba(56, 189, 248, 0.14);
+        border-color: rgba(56, 189, 248, 0.45);
     }
     .pa-identity-divider {
         height: 1px;
@@ -3833,23 +3902,23 @@ st.markdown(
     .pa-xp-dim-summary {
         list-style: none;
         cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+        display: block;
         padding: 0.55rem 0.5rem 0.6rem;
     }
     .pa-xp-dim-summary::-webkit-details-marker { display: none; }
-    .pa-xp-dim-summary-bar { flex: 1; min-width: 0; }
+    .pa-xp-dim-head {
+        justify-content: space-between;
+    }
     .pa-xp-dim-toggle {
         flex-shrink: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 1.35rem;
-        height: 1.35rem;
-        border-radius: 7px;
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 6px;
         color: #93c5fd;
-        font-size: 0.62rem;
+        font-size: 0.58rem;
         background: rgba(147, 197, 253, 0.1);
         border: 1px solid rgba(147, 197, 253, 0.22);
         transition: transform 0.18s ease, background 0.14s ease;
@@ -4256,11 +4325,11 @@ st.markdown(
         border-bottom: 1px solid rgba(59, 130, 246, 0.22);
     }
     .pa-xp-section-body .metric-line {
-        padding: 0.34rem 0;
-        font-size: 0.8rem;
+        padding: 0.46rem 0;
+        font-size: 0.87rem;
     }
     .pa-xp-section-body .metric-line .stat-val {
-        font-size: 0.86rem;
+        font-size: 0.94rem;
         font-weight: 700;
         color: #f8fafc;
     }
@@ -5202,14 +5271,6 @@ def _progression_rating_table_rows_html(
         overall_txt = _rating_score_html(row, soft_warning=True, rating_key="progression_rating")
         pass_txt = _rating_score_html(row, soft_warning=True, rating_key="pass_rating")
         carry_txt = _rating_score_html(row, soft_warning=True, rating_key="carry_rating")
-        if row.get("rating_dual_elite_badge"):
-            badge = (
-                '<span class="rating-badge-tip">'
-                '<i class="fa-solid fa-bolt rating-fa-badge dual-elite" aria-hidden="true"></i>'
-                '<span class="rating-tipbox">Elite in passes &amp; carries</span>'
-                "</span>"
-            )
-            overall_txt = f"{overall_txt}{badge}"
         sel = " sel" if selected_player_id and str(row["player_id"]) == str(selected_player_id) else ""
         body.append(
             f'<tr class="row{sel}" data-pid="{pid}" onclick="pickPlayer(\'{pid}\')">'
@@ -6115,6 +6176,7 @@ def _build_player_analysis_left_card_html(
     player: dict,
     *,
     origin_heatmap_b64: str | None = None,
+    xp_profile: dict | None = None,
     label_fn,
     tooltip_fn,
     rank_in_group_fn,
@@ -6123,7 +6185,7 @@ def _build_player_analysis_left_card_html(
 ) -> str:
     search_pos = sim.player_search_position(player)
     group_label = sim.similarity_position_label(search_pos) if search_pos else "—"
-    badges = _rating_badges_html(player)
+    badges = _xp_identity_badges_html(xp_profile)
     badges_block = (
         f'<div class="pa-identity-badges">{badges}</div>' if badges else ""
     )
@@ -6416,7 +6478,13 @@ def _xp_gradient_bar_marker_html(
     )
 
 
-def _xp_gradient_bar_row_html(label: str, display_key: str, xp_profile: dict) -> str:
+def _xp_gradient_bar_row_html(
+    label: str,
+    display_key: str,
+    xp_profile: dict,
+    *,
+    head_html: str | None = None,
+) -> str:
     pct = _xp_profile_display_pct(xp_profile, display_key)
     if pct is None:
         track_html = (
@@ -6443,11 +6511,15 @@ def _xp_gradient_bar_row_html(label: str, display_key: str, xp_profile: dict) ->
             "</div>"
             "</div>"
         )
+    if head_html is None:
+        head_html = (
+            '<div class="pa-xp-gradient-bar-head">'
+            f'<span class="pa-xp-gradient-bar-label">{html.escape(label)}</span>'
+            "</div>"
+        )
     return (
         '<div class="pa-xp-gradient-bar-row">'
-        '<div class="pa-xp-gradient-bar-head">'
-        f'<span class="pa-xp-gradient-bar-label">{html.escape(label)}</span>'
-        "</div>"
+        f"{head_html}"
         f"{track_html}"
         "</div>"
     )
@@ -6481,20 +6553,27 @@ def _xp_profile_subbar_html(xp_profile: dict, metric: str) -> str:
 
 
 def _xp_profile_dim_html(display_key: str, xp_profile: dict) -> str:
-    main_bar = _xp_gradient_bar_row_html(
-        xstats.XP_PROFILE_BAR_LABELS[display_key], display_key, xp_profile
-    )
+    label = xstats.XP_PROFILE_BAR_LABELS[display_key]
     metrics = xstats.XP_PROFILE_BAR_METRICS.get(display_key, ())
     subs = "".join(_xp_profile_subbar_html(xp_profile, metric) for metric in metrics)
     if not subs:
+        main_bar = _xp_gradient_bar_row_html(label, display_key, xp_profile)
         return f'<div class="pa-xp-dim">{main_bar}</div>'
-    return (
-        '<details class="pa-xp-dim pa-xp-dim-acc" name="pa-xp-dim">'
-        '<summary class="pa-xp-dim-summary">'
-        f'<span class="pa-xp-dim-summary-bar">{main_bar}</span>'
+    head_html = (
+        '<div class="pa-xp-gradient-bar-head pa-xp-dim-head">'
+        f'<span class="pa-xp-gradient-bar-label">{html.escape(label)}</span>'
         '<span class="pa-xp-dim-toggle" aria-hidden="true">'
         '<i class="fa-solid fa-chevron-down"></i>'
         "</span>"
+        "</div>"
+    )
+    main_bar = _xp_gradient_bar_row_html(
+        label, display_key, xp_profile, head_html=head_html
+    )
+    return (
+        '<details class="pa-xp-dim pa-xp-dim-acc" name="pa-xp-dim">'
+        '<summary class="pa-xp-dim-summary">'
+        f"{main_bar}"
         "</summary>"
         f'<div class="pa-xp-subbars">{subs}</div>'
         "</details>"
@@ -6585,12 +6664,14 @@ def _xp_index_boxes_html(xp_profile: dict | None) -> str:
             continue
         tier_label = xstats.XP_INDEX_TIER_LABELS.get(tier, "—")
         tip = xstats.XP_INDEX_TOOLTIPS.get(idx_key, "")
+        icon = xstats.XP_INDEX_ICONS.get(idx_key, "")
         rows.append(
             _xp_index_row_html(
                 label,
                 tier_label,
                 row_class=f"pa-xp-index-row-{tier}",
                 tip=tip,
+                icon=icon,
             )
         )
     for spec in xstats.XP_BADGE_SPECS:
@@ -7088,6 +7169,7 @@ def _build_player_analysis_layout_html(
     left_card = _build_player_analysis_left_card_html(
         player,
         origin_heatmap_b64=origin_heatmap_b64,
+        xp_profile=xp_profile,
         label_fn=label_fn,
         tooltip_fn=tooltip_fn,
         rank_in_group_fn=rank_in_group_fn,
@@ -9321,15 +9403,21 @@ def render_presentation_tab(
 ) -> None:
     _ = (all_players, passes_by_player, players_by_id, pool_by_position, rated, xp_players)
 
+    xp_ref = (
+        '<a class="pres-xp-ref" href="#pres-xp-card" title="Veja o card ao lado: o que é o xP">'
+        'xP</a>'
+    )
+
     st.markdown(
         '<div class="pres-about-card">'
         '<span class="pres-step-num">1</span>'
         '<span class="pres-about-icon"><i class="fa-solid fa-people-group"></i></span>'
         "<div class='pres-about-body'>"
         "<h4>Dashboard</h4>"
-        "<p>Comparativo de passe na Copa do Mundo: cada jogador é avaliado "
-        "<strong>por posição</strong>, entre pares da mesma função em campo.</p>"
-        "<p>O <strong>xP</strong> é a base de tudo: perfil do atleta, rankings na função "
+        "<p>Comparativo entre atletas da Copa do Mundo de mesma posição, "
+        "analisando o impacto causado pelos seus passes na competição através da "
+        f"utilização da métrica {xp_ref}.</p>"
+        f"<p>O {xp_ref} é a base de tudo: perfil do atleta, rankings na função "
         "e leitura do impacto real de cada entrega.</p>"
         "<p>Inclui <strong>Player Analysis</strong>, dados próprios e mapas "
         "para aprofundar cada caso.</p>"
