@@ -2014,6 +2014,15 @@ st.markdown(
     }
     .pres-mini-card h4 { margin: 0 0 0.3rem 0; color: #93c5fd; font-size: 0.92rem; }
     .pres-mini-card p { margin: 0; color: #94a3b8; font-size: 0.84rem; line-height: 1.42; }
+    .pres-cards-2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 0.85rem;
+    }
+    @media (max-width: 700px) {
+        .pres-cards-2 { grid-template-columns: 1fr; }
+    }
     .pres-cards-4 {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -9312,21 +9321,18 @@ def render_presentation_tab(
 ) -> None:
     _ = (all_players, passes_by_player, players_by_id, pool_by_position, rated, xp_players)
 
-    xp_ref = (
-        '<a class="pres-xp-ref" href="#pres-xp-card" title="Veja o card 2: o que é o xP">'
-        'xP<span class="pres-xp-ref-mark">2</span></a>'
-    )
-
     st.markdown(
         '<div class="pres-about-card">'
         '<span class="pres-step-num">1</span>'
         '<span class="pres-about-icon"><i class="fa-solid fa-people-group"></i></span>'
         "<div class='pres-about-body'>"
         "<h4>Dashboard</h4>"
-        "<p>Uma ferramenta de <strong>análise por posição</strong> dos atletas: cada jogador é "
-        "avaliado pelo seu perfil de passe e comparado apenas com outros da mesma função em campo.</p>"
-        f"<p>Assim, o {xp_ref} revela quem realmente se destaca dentro do próprio papel tático — de "
-        "zagueiros que constroem a saída de bola a meias e pontas que criam as jogadas decisivas.</p>"
+        "<p>Comparativo de passe na Copa do Mundo: cada jogador é avaliado "
+        "<strong>por posição</strong>, entre pares da mesma função em campo.</p>"
+        "<p>O <strong>xP</strong> é a base de tudo: perfil do atleta, rankings na função "
+        "e leitura do impacto real de cada entrega.</p>"
+        "<p>Inclui <strong>Player Analysis</strong>, dados próprios e mapas "
+        "para aprofundar cada caso.</p>"
         "</div>"
         "</div>",
         unsafe_allow_html=True,
@@ -9369,21 +9375,19 @@ def render_presentation_tab(
         unsafe_allow_html=True,
     )
 
-    st.markdown('<p class="pres-section-label">As 4 dimensões do xP Profile</p>', unsafe_allow_html=True)
+    st.markdown('<p class="pres-section-label">As 2 dimensões do xP Profile</p>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="pres-cards-4">'
+        '<div class="pres-cards-2">'
         '<div class="pres-tile pres-dim">'
         '<span class="pres-icon"><i class="fa-solid fa-chart-simple"></i></span>'
-        "<h5>Impacto Geral</h5><p>xP gerado por jogo.</p></div>"
+        "<h5>Impacto Geral</h5>"
+        "<p>Quanto valor ofensivo o jogador produz por jogo — volume de xP gerado "
+        "e passes threat na posição.</p></div>"
         '<div class="pres-tile pres-dim">'
         '<span class="pres-icon"><i class="fa-solid fa-bolt"></i></span>'
-        "<h5>Impacto por ação</h5><p>xP médio por passe.</p></div>"
-        '<div class="pres-tile pres-dim">'
-        '<span class="pres-icon"><i class="fa-solid fa-bullseye"></i></span>'
-        "<h5>Entrega vs Esperado</h5><p>Resíduo mediano acima do esperado.</p></div>"
-        '<div class="pres-tile pres-dim">'
-        '<span class="pres-icon"><i class="fa-solid fa-wave-square"></i></span>'
-        "<h5>Consistência</h5><p>Estabilidade entre jogos.</p></div>"
+        "<h5>Impacto por Passe</h5>"
+        "<p>A eficiência de cada entrega — xP médio por passe e qualidade nos "
+        "passes de perigo (threat).</p></div>"
         "</div>",
         unsafe_allow_html=True,
     )
