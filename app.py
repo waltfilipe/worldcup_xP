@@ -158,6 +158,7 @@ from progression_maps import (
 xpe = _load_xp_study_engine()
 xe = _load_xp_engine()
 xstats = _load_xp_stats_engine()
+IMPACT_PASS_ABBR = getattr(xstats, "IMPACT_PASS_ABBR", "I.P.")
 _xp_study_maps = _load_xp_study_maps()
 _CMAP_XP_GRAY_RED = _xp_study_maps.CMAP_XP_GRAY_RED
 draw_passes_destination_heatmap = _xp_study_maps.draw_passes_destination_heatmap
@@ -7689,11 +7690,11 @@ def render_xp_season_rankings(xp_players: list[dict]) -> None:
     st.markdown("### xP M4 — Copa do Mundo")
     st.caption(
         f"Model 4 (origin 12×8 → destination 12×8) · Team seasonal surface · "
-        f"{xstats.IMPACT_PASS_ABBR} = top {int(xe.THREAT_QUANTILE * 100)}% residual + xP ≥ P{int(xe.THREAT_XP_QUANTILE * 100)} by distance · "
+        f"{IMPACT_PASS_ABBR} = top {int(xe.THREAT_QUANTILE * 100)}% residual + xP ≥ P{int(xe.THREAT_XP_QUANTILE * 100)} by distance · "
         f"{meta.get('passes', '—'):,} passes · "
-        f"{meta.get('threats', '—'):,} xP {xstats.IMPACT_PASS_ABBR}"
+        f"{meta.get('threats', '—'):,} xP {IMPACT_PASS_ABBR}"
         if meta
-        else f"Model 4 with {xstats.IMPACT_PASS_ABBR} quantile thresholds."
+        else f"Model 4 with {IMPACT_PASS_ABBR} quantile thresholds."
     )
 
     position_groups = sorted({str(p.get("position_group") or "—") for p in xp_players})
@@ -7729,7 +7730,7 @@ def render_xp_season_rankings(xp_players: list[dict]) -> None:
         st.dataframe(show, use_container_width=True, hide_index=True)
 
     with threat_col:
-        st.markdown(f"**Top xP {xstats.IMPACT_PASS_ABBR}**")
+        st.markdown(f"**Top xP {IMPACT_PASS_ABBR}**")
         by_threat = sorted(rows, key=lambda p: int(p.get("xp_m4_threat_passes", 0)), reverse=True)
         show_t = pd.DataFrame([
             {
@@ -8347,7 +8348,7 @@ def render_scatter_section(
     st.subheader("Scatter — xP Stats")
     st.caption(
         "Choose between **Regular Stats** (traditional pass volume) and "
-        f"**xP Stats** (xP, {xstats.IMPACT_PASS_ABBR} and special delivery types)."
+        f"**xP Stats** (xP, {IMPACT_PASS_ABBR} and special delivery types)."
     )
 
     if not all_players:
@@ -8637,7 +8638,7 @@ def render_maps_section(
         with map_col:
             st.pyplot(fig_passes, clear_figure=True, use_container_width=True)
             pass_kind = (
-                f"xP {xstats.IMPACT_PASS_ABBR}"
+                f"xP {IMPACT_PASS_ABBR}"
                 if xstats.is_maps_xp_threat_pass(map_filter_key)
                 else "completed passes"
             )
@@ -8748,7 +8749,7 @@ def render_estudo_section() -> None:
             )
 
     if distance_study is not None and not distance_study.empty:
-        st.markdown(f"**xP and {xstats.IMPACT_PASS_ABBR} by distance (match · legacy fixed threshold)**")
+        st.markdown(f"**xP and {IMPACT_PASS_ABBR} by distance (match · legacy fixed threshold)**")
         thr_m3 = xpe.THREAT_XP_THRESHOLDS[xpe.XP_MODEL_HIER_DEST]
         thr_m4 = xpe.THREAT_XP_THRESHOLDS[xpe.XP_MODEL_HIER_OD]
         dist_display = distance_study[
@@ -8778,7 +8779,7 @@ def render_estudo_section() -> None:
                 "% Impact (4)": st.column_config.NumberColumn(format="%.1f"),
             },
         )
-        with st.expander(f"{xstats.IMPACT_PASS_ABBR} by player and distance"):
+        with st.expander(f"{IMPACT_PASS_ABBR} by player and distance"):
             if distance_study_by_player is not None and not distance_study_by_player.empty:
                 player_display = distance_study_by_player[
                     [
@@ -9260,13 +9261,13 @@ def _render_presentation_blur_demo(player: dict, passes) -> None:
         ),
         (
             draw_impact_pass_map(passes, name, team_label, dashboard=True),
-            f"{xstats.IMPACT_PASS_ABBR}",
-            f"Passes that meaningfully change xT. Colors highlight progression and high {xstats.IMPACT_PASS_ABBR}.",
+            f"{IMPACT_PASS_ABBR}",
+            f"Passes that meaningfully change xT. Colors highlight progression and high {IMPACT_PASS_ABBR}.",
         ),
         (
             draw_pass_destination_heatmap(passes, name, team_label, dashboard=True),
-            f"{xstats.IMPACT_PASS_ABBR} destinations",
-            f"Where {xstats.IMPACT_PASS_ABBR} arrive — penetration lanes and decisive passing lines.",
+            f"{IMPACT_PASS_ABBR} destinations",
+            f"Where {IMPACT_PASS_ABBR} arrive — penetration lanes and decisive passing lines.",
         ),
     ]
     tiles_html = "".join(
@@ -9298,7 +9299,7 @@ PRES_FEATURE_SPECS: tuple[tuple[str, str, str], ...] = (
     (
         "maps",
         "Maps",
-        f"Season map of xP {xstats.IMPACT_PASS_ABBR} with distance filters.",
+        f"Season map of xP {IMPACT_PASS_ABBR} with distance filters.",
     ),
 )
 
@@ -9384,7 +9385,7 @@ def _render_pres_flow_steps() -> None:
         ),
         (
             "Scatter",
-            f"Compare players in a position on an X/Y chart using xP and {xstats.IMPACT_PASS_ABBR} metrics.",
+            f"Compare players in a position on an X/Y chart using xP and {IMPACT_PASS_ABBR} metrics.",
         ),
         (
             "Maps",
@@ -9459,7 +9460,7 @@ def render_presentation_tab(
         "<em>900k</em> passes.</li>"
         "<li>The model also adjusts for pass progression (moving up the pitch) and "
         "destination accessibility (more or less obvious targets).</li>"
-        f"<li><strong>Impact Pass ({xstats.IMPACT_PASS_ABBR})</strong> — passes that combine "
+        f"<li><strong>Impact Pass ({IMPACT_PASS_ABBR})</strong> — passes that combine "
         "high surprise (top residual for distance) with strong xP value; the deliveries "
         "that most change the game.</li>"
         "</ul>"
@@ -9540,7 +9541,7 @@ def _render_similarity_player_panel(
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("Minutos", fmt_stat_value("minutes", player.get("minutes")))
         m2.metric("Passes", fmt_stat_value("passes_completed", player.get("passes_completed")))
-        m3.metric(f"{xstats.IMPACT_PASS_ABBR} p90", fmt_stat_value("impact_passes_p90", player.get("impact_passes_p90")))
+        m3.metric(f"{IMPACT_PASS_ABBR} p90", fmt_stat_value("impact_passes_p90", player.get("impact_passes_p90")))
         m4.metric(
             f"Impact Carries p90",
             fmt_stat_value("carry_impact_passes_p90", player.get("carry_impact_passes_p90")),
