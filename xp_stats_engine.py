@@ -34,6 +34,7 @@ PENALTY_Y_MAX = pe.PENALTY_BOX_Y_MAX
 
 XP_COL = "xp_m4"
 THREAT_COL = "is_threat_m4"
+IMPACT_PASS_ABBR = "I.P."
 RESIDUAL_COL = "xp_residual"
 DISTANCE_BAND_LABELS = xse.DISTANCE_BAND_LABELS
 XP_DISTANCE_BAND_MAX_SHORT_M = xse.XP_DISTANCE_BAND_MAX_SHORT_M
@@ -173,19 +174,19 @@ MAPS_REGULAR_PASS_OPTIONS: tuple[tuple[str, str], ...] = (
     ("into_box", "Passes into Box"),
 )
 MAPS_SPECIAL_PASS_OPTIONS: tuple[tuple[str, str], ...] = (
-    ("xp_threat_all", "xP Impact Passes"),
+    ("xp_threat_all", f"xP {IMPACT_PASS_ABBR}"),
     (
         "xp_threat_short",
-        f"xP Impact Passes · Short ({DISTANCE_BAND_LABELS['short']})",
+        f"xP {IMPACT_PASS_ABBR} · Short ({DISTANCE_BAND_LABELS['short']})",
     ),
     (
         "xp_threat_long",
-        f"xP Impact Passes · Long ({DISTANCE_BAND_LABELS['long']})",
+        f"xP {IMPACT_PASS_ABBR} · Long ({DISTANCE_BAND_LABELS['long']})",
     ),
 )
 MAPS_STAT_TYPE_OPTIONS: tuple[tuple[str, str], ...] = (
     ("regular", "Regular Stats"),
-    ("special", "Special Stat"),
+    ("special", "xP Stats"),
 )
 MAPS_PASS_TYPE_OPTIONS: tuple[tuple[str, str], ...] = (
     *MAPS_REGULAR_PASS_OPTIONS,
@@ -515,7 +516,7 @@ XP_STATS_SECTIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("Totals", (
         "xp_per_90", "xp_m4_per_pass", "xp_m4_threat_rate",
     )),
-    ("Special Stats", (
+    ("xP Stats", (
         "special_diagonal_long_p90", "xp_diagonal_long_total",
         "special_line_break_p90", "xp_line_break_total",
         "special_inversion_p90", "xp_inversion_total",
@@ -644,12 +645,12 @@ XP_INDEX_ICONS: dict[str, str] = {
 XP_BADGE_TOP_SIZE = 25
 XP_BADGE_SPECS: tuple[tuple[str, str, tuple[str, ...], str], ...] = (
     ("xp_badge_impact", "Impact", ("xp_per_90", "xp_m4_per_pass"), "fa-bolt"),
-    ("xp_badge_threat", "Impact Passes", ("threat_passes_p90", "xp_m4_per_threat_pass"), "fa-crosshairs"),
+    ("xp_badge_threat", IMPACT_PASS_ABBR, ("threat_passes_p90", "xp_m4_per_threat_pass"), "fa-crosshairs"),
 )
 
 XP_BADGE_TOOLTIPS: dict[str, str] = {
     "xp_badge_impact": "Top 25 at the position in xP per game and xP per pass.",
-    "xp_badge_threat": "Top 25 at the position in impact passes per game and xP per impact pass.",
+    "xp_badge_threat": f"Top 25 at the position in {IMPACT_PASS_ABBR} per game and xP per {IMPACT_PASS_ABBR}.",
 }
 
 # Player Analysis compare panel.
@@ -662,9 +663,9 @@ XP_COMPARE_HIGHLIGHT_KEYS: tuple[str, ...] = (
 )
 XP_COMPARE_HIGHLIGHT_LABELS: dict[str, str] = {
     "xp_per_90": "xP (Per game)",
-    "threat_passes_p90": "Impact Passes (Per game)",
+    "threat_passes_p90": f"{IMPACT_PASS_ABBR} (Per game)",
     "xp_m4_per_pass": "xP/Pass",
-    "xp_m4_per_threat_pass": "xP/Impact Pass",
+    "xp_m4_per_threat_pass": f"xP/{IMPACT_PASS_ABBR}",
 }
 XP_COMPARE_HIGHLIGHT_TOOLTIPS: dict[str, str] = {
     "xp_per_90": (
@@ -672,14 +673,14 @@ XP_COMPARE_HIGHLIGHT_TOOLTIPS: dict[str, str] = {
         "produces per game."
     ),
     "threat_passes_p90": (
-        "Impact passes produced per 90 minutes — volume of passes that create real danger."
+        f"{IMPACT_PASS_ABBR} produced per 90 minutes — volume of passes that create real danger."
     ),
     "xp_m4_per_pass": (
         "Average xP per pass — measures the efficiency of each delivery, "
         "independent of volume."
     ),
     "xp_m4_per_threat_pass": (
-        "Average xP on impact passes — the quality of high-value passes produced."
+        f"Average xP on {IMPACT_PASS_ABBR} — the quality of high-value passes produced."
     ),
 }
 # Secondary key metrics (less emphasis) = traditional volume stats.
@@ -711,8 +712,8 @@ XP_COMPARE_METRIC_TOOLTIPS: dict[str, str] = {
 }
 
 XP_PROFILE_BAR_TOOLTIPS: dict[str, str] = {
-    "xp_activity_display": "Offensive impact per game: xP generated and impact passes produced.",
-    "xp_edge_display": "Value per pass: average xP per pass and per impact pass.",
+    "xp_activity_display": f"Offensive impact per game: xP generated and {IMPACT_PASS_ABBR} produced.",
+    "xp_edge_display": f"Value per pass: average xP per pass and per {IMPACT_PASS_ABBR}.",
     "xp_quality_display": "How much the player delivers above the model's expected value.",
     "xp_consistency_display": "How stable game-to-game xP delivery is.",
 }
@@ -878,24 +879,24 @@ def iter_xp_stats_sections() -> tuple[tuple[str, tuple[str, ...]], ...]:
 
 XP_STATS_LABELS: dict[str, str] = {
     "xp_per_90": "xP (Per game)",
-    "threat_passes_p90": "Impact Passes (Per game)",
+    "threat_passes_p90": f"{IMPACT_PASS_ABBR} (Per game)",
     "xp_m4_total": "xP Total",
-    "xp_m4_threat_passes_p90": "xP Impact Passes (Per game)",
+    "xp_m4_threat_passes_p90": f"xP {IMPACT_PASS_ABBR} (Per game)",
     "xp_m4_per_pass": "xP/Pass",
-    "xp_m4_per_threat_pass": "xP/Impact Pass",
-    "xp_m4_threat_rate": "% Impact Passes",
+    "xp_m4_per_threat_pass": f"xP/{IMPACT_PASS_ABBR}",
+    "xp_m4_threat_rate": f"% {IMPACT_PASS_ABBR}",
     "xp_m4_per_pass_short": "xP/Pass",
     "xp_m4_per_pass_long": "xP/Pass",
-    "xp_m4_threat_rate_short": "% Impact Passes",
-    "xp_m4_threat_rate_long": "% Impact Passes",
-    "xp_m4_threat_short_p90": "xP Impact Passes (Per game)",
-    "xp_m4_threat_long_p90": "xP Impact Passes (Per game)",
+    "xp_m4_threat_rate_short": f"% {IMPACT_PASS_ABBR}",
+    "xp_m4_threat_rate_long": f"% {IMPACT_PASS_ABBR}",
+    "xp_m4_threat_short_p90": f"xP {IMPACT_PASS_ABBR} (Per game)",
+    "xp_m4_threat_long_p90": f"xP {IMPACT_PASS_ABBR} (Per game)",
     "passes_short": "Passes in band",
     "passes_long": "Passes in band",
     "xp_m4_total_short": "xP Total (Short)",
-    "xp_m4_threat_short_p90": "Impact p/game (Short)",
+    "xp_m4_threat_short_p90": f"{IMPACT_PASS_ABBR} p/game (Short)",
     "xp_m4_total_long": "xP Total (Long)",
-    "xp_m4_threat_long_p90": "Impact p/game (Long)",
+    "xp_m4_threat_long_p90": f"{IMPACT_PASS_ABBR} p/game (Long)",
     "xp_diagonal_long_total": "Long Diagonal (xP)",
     "special_diagonal_long_p90": "Long Diagonal (Per game)",
     "xp_line_break_total": "Line Break (xP)",
@@ -905,11 +906,11 @@ XP_STATS_LABELS: dict[str, str] = {
     "xp_cross_total": "Crosses (xP)",
     "special_cross_p90": "Crosses (Per game)",
     "xp_final_third_share": "%xP - Final Third",
-    "threat_final_third_p90": "Impact Passes - Final Third",
+    "threat_final_third_p90": f"{IMPACT_PASS_ABBR} - Final Third",
     "xp_box_share": "%xP - Box",
-    "threat_in_box_p90": "Impact Passes - Box",
+    "threat_in_box_p90": f"{IMPACT_PASS_ABBR} - Box",
     "xp_from_deep": "xP Deep",
-    "threat_from_deep_p90": "Impact Passes - Deep",
+    "threat_from_deep_p90": f"{IMPACT_PASS_ABBR} - Deep",
     "special_final_third_p90": "Final third (Per game)",
     "special_in_box_p90": "In box (Per game)",
     "special_from_deep_p90": "From deep (Per game)",
@@ -918,9 +919,9 @@ XP_STATS_LABELS: dict[str, str] = {
     "xp_residual_positive": "xP above expected/Pass",
     "xp_residual_negative": "xP below expected/Pass",
     "xp_surprise_rate": "Surprise Rate",
-    "xp_threat_conversion": "Impact pass conversion",
-    "xp_threat_mean_xp": "Mean impact pass xP",
-    "xp_threat_mean_residual": "Mean impact pass residual",
+    "xp_threat_conversion": f"{IMPACT_PASS_ABBR} conversion",
+    "xp_threat_mean_xp": f"Mean {IMPACT_PASS_ABBR} xP",
+    "xp_threat_mean_residual": f"Mean {IMPACT_PASS_ABBR} residual",
     "xp_m4_p90": "xP P90 (pass)",
     "xp_max_pass": "Max single-pass xP",
     "xp_game_mean": "Mean xP (Per game)",
@@ -946,10 +947,10 @@ XP_STATS_LABELS: dict[str, str] = {
 
 XP_PA_LABELS: dict[str, str] = {
     "xp_per_90": "xP / game",
-    "threat_passes_p90": "Impact passes / game",
+    "threat_passes_p90": f"{IMPACT_PASS_ABBR} / game",
     "xp_m4_per_pass": "xP / pass",
-    "xp_m4_per_threat_pass": "xP / impact pass",
-    "xp_m4_threat_rate": "% impact passes",
+    "xp_m4_per_threat_pass": f"xP / {IMPACT_PASS_ABBR}",
+    "xp_m4_threat_rate": f"% {IMPACT_PASS_ABBR}",
     "xp_residual_median": "Median residual",
     "xp_surprise_rate": "% above expected",
     "xp_game_std_adj_score": "Stability",
@@ -959,11 +960,11 @@ XP_PA_LABELS: dict[str, str] = {
 XP_PA_TOOLTIPS: dict[str, str] = {
     "xp_per_90": "xP volume from passing, normalized per 90 minutes.",
     "threat_passes_p90": (
-        "Impact passes per game — residual in the top 10% for distance and xP ≥ P75 in the same band."
+        f"{IMPACT_PASS_ABBR} per game — residual in the top 10% for distance and xP ≥ P75 in the same band."
     ),
     "xp_m4_per_pass": "Average xP per pass — measures the efficiency of each delivery.",
-    "xp_m4_per_threat_pass": "Average xP on impact passes (surprise + high value for distance).",
-    "xp_m4_threat_rate": "Share of passes classified as impact passes.",
+    "xp_m4_per_threat_pass": f"Average xP on {IMPACT_PASS_ABBR} (surprise + high value for distance).",
+    "xp_m4_threat_rate": f"Share of passes classified as {IMPACT_PASS_ABBR}.",
     "xp_residual_median": (
         "Median residual (actual xP − expected) per pass, ×100. Positive values mean passes "
         "beat the model."
@@ -997,14 +998,14 @@ SCATTER_REGULAR_METRIC_OPTIONS: tuple[tuple[str, str], ...] = (
 # Special Stat: special passes plus the xP metrics.
 SCATTER_SPECIAL_METRIC_OPTIONS: tuple[tuple[str, str], ...] = (
     ("xp_per_90", "xP / game"),
-    ("threat_passes_p90", "Impact passes / game"),
+    ("threat_passes_p90", f"{IMPACT_PASS_ABBR} / game"),
     ("xp_m4_per_pass", "xP / pass"),
-    ("xp_m4_per_threat_pass", "xP / impact pass"),
+    ("xp_m4_per_threat_pass", f"xP / {IMPACT_PASS_ABBR}"),
     ("xp_game_std_adj_score", "Stability"),
 )
 SCATTER_STAT_TYPE_OPTIONS: tuple[tuple[str, str], ...] = (
     ("regular", "Regular Stats"),
-    ("special", "Special Stats"),
+    ("special", "xP Stats"),
 )
 SCATTER_METRIC_OPTIONS: tuple[tuple[str, str], ...] = (
     *SCATTER_REGULAR_METRIC_OPTIONS,
@@ -1050,7 +1051,7 @@ SCATTER_BANDED_BASE_KEYS: frozenset[str] = frozenset({
 })
 SCATTER_EXTRA_BASE_KEYS: tuple[tuple[str, str], ...] = (
     ("xp_m4_total", "xP Total"),
-    ("xp_m4_threat_passes_p90", "xP Impact Passes (Per game)"),
+    ("xp_m4_threat_passes_p90", f"xP {IMPACT_PASS_ABBR} (Per game)"),
 )
 
 

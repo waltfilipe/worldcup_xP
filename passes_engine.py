@@ -183,13 +183,13 @@ RATING_METRIC_KEYS: tuple[str, ...] = tuple(
 )
 
 METRIC_LABELS: dict[str, str] = {
-    "impact_passes_p90": "Impact Passes p90",
+    "impact_passes_p90": "I.P. p90",
     "impact_per_pass": "Avg Pass Impact",
-    "phi_p90": "High Impact Passes p90",
-    "phi_per_pass": "Avg High Impact Passes",
+    "phi_p90": "High I.P. p90",
+    "phi_per_pass": "Avg High I.P.",
     "dxt_p90": "Pass Impact p90",
     "positive_dxt_pct": "% Passes with Positive ΔxT (+0.15)",
-    "dxt_gt_01_pct": "% High Impact Passes",
+    "dxt_gt_01_pct": "% High I.P.",
     "construction_aip": "Build-Up Impact Passes",
     "construction_aip_p90": "Build-Up Impact Passes (Per game)",
     "construction_aip_per_pass": "Build-Up Impact / Pass",
@@ -205,13 +205,13 @@ METRIC_LABELS: dict[str, str] = {
 }
 
 ANALYST_METRIC_LABELS: dict[str, str] = {
-    "impact_passes_p90": "Impact Passes",
+    "impact_passes_p90": "I.P.",
     "impact_per_pass": "Average Pass Impact",
     "risk_passes_p90": "Risk Passes",
     "risk_pass_pct": "% Risk Passes",
-    "threat_pass_pct": "Impact Pass Rate",
+    "threat_pass_pct": "I.P. Rate",
     "positive_dxt_pct": "% Passes with Positive ΔxT (+0.15)",
-    "dxt_gt_01_pct": "% High Impact Passes",
+    "dxt_gt_01_pct": "% High I.P.",
     "dist_short_impact_p90": "< 12 m",
     "dist_medium_impact_p90": "12–25 m",
     "dist_long_impact_p90": "≥ 25 m",
@@ -222,21 +222,21 @@ ANALYST_METRIC_LABELS: dict[str, str] = {
     "minutes": "Minutes played",
     "passes_completed": "Completed passes",
     "minutes_pct": "Minutes (% of position leader)",
-    "impact_passes": "Impact passes (total)",
-    "high_impact_passes": "High impact passes (total)",
+    "impact_passes": "I.P. (total)",
+    "high_impact_passes": "High I.P. (total)",
 }
 
 METRIC_TOOLTIPS: dict[str, str] = {
-    "impact_passes_p90": "Impact passes per 90 minutes.",
-    "impact_per_pass": "Average ΔxT generated per successful impact pass.",
+    "impact_passes_p90": "I.P. per 90 minutes.",
+    "impact_per_pass": "Average ΔxT generated per successful I.P..",
     "risk_passes_p90": "Passes with ΔxT ≥ 0.25 per 90 minutes.",
     "risk_pass_pct": "Share of all pass attempts with ΔxT ≥ 0.25.",
-    "threat_pass_pct": "Share of all passes that are classified as impact passes.",
+    "threat_pass_pct": "Share of all passes that are classified as I.P..",
     "positive_dxt_pct": "Share of passes with ΔxT above +0.15.",
-    "dxt_gt_01_pct": "Share of passes with ΔxT above 0.15 (high impact passes).",
-    "dist_short_impact_p90": "Impact passes per 90 on completed passes under 12 m.",
-    "dist_medium_impact_p90": "Impact passes per 90 on completed passes from 12 m to under 25 m.",
-    "dist_long_impact_p90": "Impact passes per 90 on completed passes of 25 m or more.",
+    "dxt_gt_01_pct": "Share of passes with ΔxT above 0.15 (high I.P.).",
+    "dist_short_impact_p90": "I.P. per 90 on completed passes under 12 m.",
+    "dist_medium_impact_p90": "I.P. per 90 on completed passes from 12 m to under 25 m.",
+    "dist_long_impact_p90": "I.P. per 90 on completed passes of 25 m or more.",
     "long_impact_passes": "Long balls that generated threat in the xT model.",
     "long_impact_per_long_pass": "Average ΔxT generated per successful impact long ball.",
     "construction_aip_p90": "Build-up impact passes per 90 (pass ends in the first 80% of the pitch).",
@@ -244,8 +244,8 @@ METRIC_TOOLTIPS: dict[str, str] = {
     "minutes": "Minutes played in the analyzed sample.",
     "passes_completed": "Total completed passes.",
     "minutes_pct": "Player minutes relative to the position leader.",
-    "impact_passes": "Total impact passes.",
-    "high_impact_passes": "Total high impact passes.",
+    "impact_passes": "Total I.P..",
+    "high_impact_passes": "Total high I.P..",
 }
 
 TOOLTIP_EXTRA_KEYS: tuple[str, ...] = ("minutes", "passes_completed")
@@ -329,8 +329,8 @@ TOOLTIP_LABELS: dict[str, str] = {
     "minutes": "Minutes",
     "passes_completed": "Passes",
     "minutes_pct": "Min %",
-    "impact_passes": "Impact Passes",
-    "high_impact_passes": "High Impact Passes",
+    "impact_passes": "I.P.",
+    "high_impact_passes": "High I.P.",
     "long_impact_passes": "Impact Long Balls",
     "long_impact_per_long_pass": "Average Impact",
     "dist_short_impact_p90": "< 12 m",

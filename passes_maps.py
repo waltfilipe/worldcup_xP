@@ -224,8 +224,8 @@ def _delicate_arrows(pitch, ax, x1, y1, x2, y2, color, scale: float, *, alpha: f
 
 DASHBOARD_TITLE_COMPLETED = "Completed passes\nBall circulation"
 DASHBOARD_TITLE_DEST_COMPLETED = "Completed destinations\nWhere passes arrive"
-DASHBOARD_TITLE_IMPACT = "Impact passes\nMeaningful xT change"
-DASHBOARD_TITLE_DEST_IMPACT = "Impact destinations\nPenetration zones"
+DASHBOARD_TITLE_IMPACT = f"I.P.\nMeaningful xT change"
+DASHBOARD_TITLE_DEST_IMPACT = "I.P. destinations\nPenetration zones"
 COLOR_ALL_PASSES = "#64748b"
 COLOR_ALL_PASSES_END = "#94a3b8"
 ALL_PASS_ARROW_ALPHA = 0.22
@@ -324,7 +324,7 @@ def draw_impact_pass_map(
     fig, ax, pitch = _base_pitch(figsize=figsize, dpi=dpi)
 
     if subset.empty:
-        ax.text(60, 40, "No impact passes", ha="center", va="center", color="white", fontsize=9)
+        ax.text(60, 40, "No I.P.", ha="center", va="center", color="white", fontsize=9)
     else:
         for row in subset.itertuples(index=False):
             is_high = bool(row.high_impact_success)
@@ -434,7 +434,7 @@ def draw_pass_destination_heatmap(
         ax.set_title(title, color="white", fontsize=7.6 * scale, pad=4)
         _attack_arrow(fig, fig_w=fig_w)
     else:
-        dest_kind = "impact passes" if impact_only else "completed passes"
+        dest_kind = "I.P." if impact_only else "completed passes"
         ax.set_title(
             f"{player_name}\nDestino — {dest_kind} · {PASS_DEST_HEATMAP_COLS}×{PASS_DEST_HEATMAP_ROWS} · {match_label}",
             color="white", fontsize=8.2 * scale, pad=5,

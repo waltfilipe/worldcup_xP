@@ -2241,6 +2241,17 @@ st.markdown(
         background: rgba(59, 130, 246, 0.16);
         border: 1px solid rgba(96, 165, 250, 0.4);
     }
+    .pres-about-icons {
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+    }
+    .pres-about-icon-ip {
+        color: #fecaca;
+        background: rgba(239, 68, 68, 0.14);
+        border-color: rgba(248, 113, 113, 0.45);
+    }
     .pres-about-body h4 { margin: 0 0 0.3rem 0; color: #f1f5f9; font-size: 1rem; }
     .pres-about-body p { margin: 0; color: #94a3b8; font-size: 0.88rem; line-height: 1.5; }
     .pres-about-body p + p { margin-top: 0.5rem; }
@@ -4181,6 +4192,14 @@ st.markdown(
         z-index: 5;
         display: inline-flex;
         pointer-events: auto;
+    }
+    .pa-xp-gradient-bar-marker-only {
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 5;
+        display: inline-flex;
+        pointer-events: none;
     }
     .pa-xp-gradient-bar-tip .pa-xp-gradient-bar-marker {
         position: relative;
@@ -6446,11 +6465,18 @@ def _xp_gradient_bar_marker_html(
     xp_profile: dict,
     display_key: str,
 ) -> str:
+    marker = '<span class="pa-xp-gradient-bar-marker"></span>'
+    if display_key in {"xp_activity_display", "xp_edge_display"}:
+        return (
+            f'<span class="pa-xp-gradient-bar-marker-only" style="left:{pct:.1f}%">'
+            f"{marker}"
+            "</span>"
+        )
     tooltip = _xp_gradient_bar_tooltip_html(xp_profile, display_key)
     plain = html.escape(_xp_gradient_bar_tooltip_plain(xp_profile, display_key), quote=True)
     return (
         f'<span class="pa-xp-gradient-bar-tip" style="left:{pct:.1f}%" tabindex="0" title="{plain}">'
-        '<span class="pa-xp-gradient-bar-marker"></span>'
+        f"{marker}"
         f'<span class="pa-xp-gradient-bar-tipbox">{tooltip}</span>'
         "</span>"
     )
@@ -6566,14 +6592,14 @@ def _xp_profile_ineligibility_note(xp_profile: dict) -> str:
         min_passes = xp_profile.get("xp_profile_min_passes")
         passes_txt = f"{float(min_passes):.0f}" if min_passes is not None else "—"
         return (
-            f"xP Profile unavailable — requires &gt;{min_pct * 100:.0f}% dos minutos e "
+            f"xP Profile unavailable — requires &gt;{min_pct * 100:.0f}% of minutes and "
             f"being among the {pool_size} with the most passes at the position "
             f"(min. {passes_txt} passes)."
         )
     p30_min = xp_profile.get("xp_profile_p30_min_passes", xp_profile.get("xp_profile_min_passes"))
     passes_txt = f"{float(p30_min):.0f}" if p30_min is not None else "P30"
     return (
-        f"xP Profile unavailable — requires &gt;{min_pct * 100:.0f}% dos minutos "
+        f"xP Profile unavailable — requires &gt;{min_pct * 100:.0f}% of minutes "
         f"and ≥{passes_txt} completed passes (P{xstats.XP_PROFILE_BAR_PASS_PERCENTILE} at the position)."
     )
 
@@ -7663,20 +7689,27 @@ def render_xp_season_rankings(xp_players: list[dict]) -> None:
     st.markdown("### xP M4 — Copa do Mundo")
     st.caption(
         f"Model 4 (origin 12×8 → destination 12×8) · Team seasonal surface · "
-        f"Impact pass = top {int(xe.THREAT_QUANTILE * 100)}% residual + xP ≥ P{int(xe.THREAT_XP_QUANTILE * 100)} by distance · "
+        f"{xstats.IMPACT_PASS_ABBR} = top {int(xe.THREAT_QUANTILE * 100)}% residual + xP ≥ P{int(xe.THREAT_XP_QUANTILE * 100)} by distance · "
         f"{meta.get('passes', '—'):,} passes · "
-        f"{meta.get('threats', '—'):,} xP impact passes"
+        f"{meta.get('threats', '—'):,} xP {xstats.IMPACT_PASS_ABBR}"
         if meta
-        else "Model 4 with impact-pass quantile thresholds."
+        else f"Model 4 with {xstats.IMPACT_PASS_ABBR} quantile thresholds."
     )
 
+    position_groups = sorted({str(p.get("position_group") or "—") for p in xp_players})
+    pos_options = ["All"] + position_groups
     pos_filter = st.selectbox(
         "Position (group)",
-        options=["Todas"] + sorted({str(p.get("position_group") or "—") for p in xp_players}),
+        options=pos_options,
+        format_func=lambda group: (
+            "All"
+            if group == "All"
+            else position_group_label(group)
+        ),
         key="xp_rank_pos_filter",
     )
     rows = xp_players
-    if pos_filter != "Todas":
+    if pos_filter != "All":
         rows = [p for p in xp_players if str(p.get("position_group")) == pos_filter]
 
     rank_col, threat_col = st.columns(2, gap="medium")
@@ -7685,7 +7718,7 @@ def render_xp_season_rankings(xp_players: list[dict]) -> None:
         show = pd.DataFrame([
             {
                 "Player": p["player_name"],
-                "Time": p.get("team", "—"),
+                "Team": p.get("team", "—"),
                 "Pos": p.get("position", "—"),
                 "Passes": p.get("passes_completed", 0),
                 "xP total": round(float(p.get("xp_m4_total", 0)), 2),
@@ -7696,12 +7729,12 @@ def render_xp_season_rankings(xp_players: list[dict]) -> None:
         st.dataframe(show, use_container_width=True, hide_index=True)
 
     with threat_col:
-        st.markdown("**Top xP Impact Passes**")
+        st.markdown(f"**Top xP {xstats.IMPACT_PASS_ABBR}**")
         by_threat = sorted(rows, key=lambda p: int(p.get("xp_m4_threat_passes", 0)), reverse=True)
         show_t = pd.DataFrame([
             {
                 "Player": p["player_name"],
-                "Time": p.get("team", "—"),
+                "Team": p.get("team", "—"),
                 "xP Impact": int(p.get("xp_m4_threat_passes", 0)),
                 "≤30m": int(p.get("xp_m4_threat_short", 0)),
                 ">30m": int(p.get("xp_m4_threat_long", 0)),
@@ -8314,7 +8347,7 @@ def render_scatter_section(
     st.subheader("Scatter — xP Stats")
     st.caption(
         "Choose between **Regular Stats** (traditional pass volume) and "
-        "**Special Stats** (xP, impact passes and special delivery types)."
+        f"**xP Stats** (xP, {xstats.IMPACT_PASS_ABBR} and special delivery types)."
     )
 
     if not all_players:
@@ -8379,7 +8412,7 @@ def render_scatter_section(
     axis_x_col, axis_y_col = st.columns(2, gap="small")
     with axis_x_col:
         x_key = st.selectbox(
-            "Eixo X",
+            "X axis",
             options=metric_keys,
             format_func=lambda key: metric_labels[key],
             index=0,
@@ -8387,7 +8420,7 @@ def render_scatter_section(
         )
     with axis_y_col:
         y_key = st.selectbox(
-            "Eixo Y",
+            "Y axis",
             options=metric_keys,
             format_func=lambda key: metric_labels[key],
             index=min(1, len(metric_keys) - 1),
@@ -8482,7 +8515,7 @@ def render_stats_section(
         f'<p class="stats-player-meta">{html.escape(str(profile.get("team", "—")))} · '
         f'{html.escape(str(profile.get("position", "—")))} · {html.escape(group_label)} · '
         f"Bars = rank in group · Short {xstats.DISTANCE_BAND_LABELS['short']} · "
-        f"Longo {xstats.DISTANCE_BAND_LABELS['long']}</p>",
+        f"Long {xstats.DISTANCE_BAND_LABELS['long']}</p>",
         unsafe_allow_html=True,
     )
     st.html(_build_stats_panel_html(profile), width="stretch")
@@ -8604,7 +8637,7 @@ def render_maps_section(
         with map_col:
             st.pyplot(fig_passes, clear_figure=True, use_container_width=True)
             pass_kind = (
-                "xP impact passes"
+                f"xP {xstats.IMPACT_PASS_ABBR}"
                 if xstats.is_maps_xp_threat_pass(map_filter_key)
                 else "completed passes"
             )
@@ -8688,7 +8721,7 @@ def render_estudo_section() -> None:
         comp_display = comp_display.rename(columns={
             "player_name": "Player",
             "position": "Pos",
-            "team": "Time",
+            "team": "Team",
             "passes_completed": "Passes",
             "xp_hierarchical_dest": "xP (3)",
             "rank_hierarchical_dest": "#3",
@@ -8706,16 +8739,16 @@ def render_estudo_section() -> None:
         )
         with st.expander("How to read the models"):
             st.markdown(
-                f"- **Modelo 3:** raridade do **destino** (grade 12×8), com mistura "
+                f"- **Model 3:** destination rarity (12×8 grid), blended with "
                 f"`{alpha:.2f}·match + {1-alpha:.2f}·league average`.\n"
-                f"- **Modelo 4:** raridade da **rota origem→destino** "
+                f"- **Model 4:** origin→destination route rarity "
                 f"(origin 12×8, destination 12×8), same match/league blend.\n"
                 f"- **xP scale:** the rarest cell/route is worth **{xp_max:.1f}**; "
                 f"other passes are proportional fractions (cap {xp_max:.1f} per pass)."
             )
 
     if distance_study is not None and not distance_study.empty:
-        st.markdown("**xP and Impact Passes by distance (match · legacy fixed threshold)**")
+        st.markdown(f"**xP and {xstats.IMPACT_PASS_ABBR} by distance (match · legacy fixed threshold)**")
         thr_m3 = xpe.THREAT_XP_THRESHOLDS[xpe.XP_MODEL_HIER_DEST]
         thr_m4 = xpe.THREAT_XP_THRESHOLDS[xpe.XP_MODEL_HIER_OD]
         dist_display = distance_study[
@@ -8745,7 +8778,7 @@ def render_estudo_section() -> None:
                 "% Impact (4)": st.column_config.NumberColumn(format="%.1f"),
             },
         )
-        with st.expander("Impact Passes by player and distance"):
+        with st.expander(f"{xstats.IMPACT_PASS_ABBR} by player and distance"):
             if distance_study_by_player is not None and not distance_study_by_player.empty:
                 player_display = distance_study_by_player[
                     [
@@ -8755,7 +8788,7 @@ def render_estudo_section() -> None:
                 ].copy()
                 player_display = player_display.rename(columns={
                     "player_name": "Player",
-                    "team": "Time",
+                    "team": "Team",
                     "band_label": "Distance",
                     "passes": "Passes",
                     "mean_xp_m3": "Mean xP (3)",
@@ -8779,7 +8812,7 @@ def render_estudo_section() -> None:
             display_m3 = display_m3.rename(columns={
                 "rank": "#",
                 "player_name": "Player",
-                "team": "Time",
+                "team": "Team",
                 "xp_total": "xP",
                 "xp_per_pass": "xP/p",
             })
@@ -8792,7 +8825,7 @@ def render_estudo_section() -> None:
             display_m4 = display_m4.rename(columns={
                 "rank": "#",
                 "player_name": "Player",
-                "team": "Time",
+                "team": "Team",
                 "xp_total": "xP",
                 "xp_per_pass": "xP/p",
             })
@@ -8875,7 +8908,7 @@ def render_estudo_section() -> None:
     with table_col:
         t3_col, t4_col = st.columns(2, gap="small")
         with t3_col:
-            st.caption("Modelo 3 — destino")
+            st.caption("Model 3 — destination")
             if top_m3.empty:
                 st.info("No passes.")
             else:
@@ -8884,7 +8917,7 @@ def render_estudo_section() -> None:
                 table3 = table3.rename(columns={"xp_value": "xP", "pass_distance": "Dist"})
                 st.dataframe(table3, use_container_width=True, hide_index=True)
         with t4_col:
-            st.caption("Modelo 4 — origem→destino")
+            st.caption("Model 4 — origin→destination")
             if top_m4.empty:
                 st.info("No passes.")
             else:
@@ -9227,13 +9260,13 @@ def _render_presentation_blur_demo(player: dict, passes) -> None:
         ),
         (
             draw_impact_pass_map(passes, name, team_label, dashboard=True),
-            "Impact passes",
-            "Passes that meaningfully change xT. Colors highlight progression and high impact.",
+            f"{xstats.IMPACT_PASS_ABBR}",
+            f"Passes that meaningfully change xT. Colors highlight progression and high {xstats.IMPACT_PASS_ABBR}.",
         ),
         (
             draw_pass_destination_heatmap(passes, name, team_label, dashboard=True),
-            "Impact destinations",
-            "Where impact passes arrive — penetration lanes and decisive passing lines.",
+            f"{xstats.IMPACT_PASS_ABBR} destinations",
+            f"Where {xstats.IMPACT_PASS_ABBR} arrive — penetration lanes and decisive passing lines.",
         ),
     ]
     tiles_html = "".join(
@@ -9265,7 +9298,7 @@ PRES_FEATURE_SPECS: tuple[tuple[str, str, str], ...] = (
     (
         "maps",
         "Maps",
-        "Season map of xP Impact Passes with distance filters.",
+        f"Season map of xP {xstats.IMPACT_PASS_ABBR} with distance filters.",
     ),
 )
 
@@ -9351,8 +9384,7 @@ def _render_pres_flow_steps() -> None:
         ),
         (
             "Scatter",
-            "Compare players in a position on an X/Y chart using "
-            "xP and pass-volume metrics.",
+            f"Compare players in a position on an X/Y chart using xP and {xstats.IMPACT_PASS_ABBR} metrics.",
         ),
         (
             "Maps",
@@ -9412,7 +9444,11 @@ def render_presentation_tab(
     st.markdown(
         '<div class="pres-card pres-card-hero pres-card-with-icon" id="pres-xp-card">'
         '<span class="pres-step-num pres-step-num-accent">2</span>'
+        '<div class="pres-about-icons">'
         '<span class="pres-about-icon"><i class="fa-solid fa-lightbulb"></i></span>'
+        '<span class="pres-about-icon pres-about-icon-ip" title="Impact Pass (I.P.)">'
+        '<i class="fa-solid fa-crosshairs"></i></span>'
+        '</div>'
         "<div class='pres-about-body'>"
         "<h4>xP (Expected Pass) — Explained</h4>"
         "<ul class='pres-hero-list'>"
@@ -9423,6 +9459,9 @@ def render_presentation_tab(
         "<em>900k</em> passes.</li>"
         "<li>The model also adjusts for pass progression (moving up the pitch) and "
         "destination accessibility (more or less obvious targets).</li>"
+        f"<li><strong>Impact Pass ({xstats.IMPACT_PASS_ABBR})</strong> — passes that combine "
+        "high surprise (top residual for distance) with strong xP value; the deliveries "
+        "that most change the game.</li>"
         "</ul>"
         "</div>"
         "</div>",
@@ -9470,7 +9509,7 @@ def render_presentation_tab(
         '<div class="pres-tile">'
         '<span class="pres-icon"><i class="fa-solid fa-braille"></i></span>'
         "<h5>Scatter</h5><p>Compare players in the same position on an X/Y chart — "
-        "Regular Stats or Special Stats.</p></div>"
+        "Regular Stats or xP Stats.</p></div>"
         '<div class="pres-tile">'
         '<span class="pres-icon"><i class="fa-solid fa-location-dot"></i></span>'
         "<h5>Maps</h5><p>View passes on the pitch, colored by xP.</p></div>"
@@ -9501,9 +9540,9 @@ def _render_similarity_player_panel(
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("Minutos", fmt_stat_value("minutes", player.get("minutes")))
         m2.metric("Passes", fmt_stat_value("passes_completed", player.get("passes_completed")))
-        m3.metric("Impact Passes p90", fmt_stat_value("impact_passes_p90", player.get("impact_passes_p90")))
+        m3.metric(f"{xstats.IMPACT_PASS_ABBR} p90", fmt_stat_value("impact_passes_p90", player.get("impact_passes_p90")))
         m4.metric(
-            "Impact Carries p90",
+            f"Impact Carries p90",
             fmt_stat_value("carry_impact_passes_p90", player.get("carry_impact_passes_p90")),
         )
     else:

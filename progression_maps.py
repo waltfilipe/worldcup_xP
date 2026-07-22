@@ -203,7 +203,7 @@ def draw_threat_actions_map(
         _draw_action_arrows(pitch, ax, carry_subset, COLOR_CARRY_THREAT, scale, alpha=0.78)
 
     legend_handles = [
-        Line2D([0], [0], color=COLOR_PASS_THREAT, lw=1.4 * scale, label="Impact pass", alpha=0.85),
+        Line2D([0], [0], color=COLOR_PASS_THREAT, lw=1.4 * scale, label="I.P.", alpha=0.85),
         Line2D([0], [0], color=COLOR_CARRY_THREAT, lw=1.4 * scale, label="Impact carry", alpha=0.85),
     ]
     leg = ax.legend(
