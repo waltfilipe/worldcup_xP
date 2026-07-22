@@ -1211,12 +1211,38 @@ def _xp_compare_profile_row_html(
 
 
 def _xp_compare_metric_label_html(label: str, key: str) -> str:
-    tip = (xstats.XP_COMPARE_METRIC_TOOLTIPS.get(key) or "").strip()
+    tip = (
+        xstats.XP_COMPARE_HIGHLIGHT_TOOLTIPS.get(key)
+        or xstats.XP_COMPARE_METRIC_TOOLTIPS.get(key)
+        or ""
+    ).strip()
     if not tip:
         return html.escape(label)
     return (
         f'<span class="metric-tip" tabindex="0">{html.escape(label)}'
         f'<span class="metric-tipbox">{html.escape(tip)}</span></span>'
+    )
+
+
+def _xp_compare_highlight_row_html(
+    label: str,
+    primary: dict,
+    secondary: dict,
+    key: str,
+) -> str:
+    p_val = html.escape(_xp_compare_metric_display(primary, key))
+    s_val = html.escape(_xp_compare_metric_display(secondary, key))
+    p_num = _xp_compare_metric_numeric(primary, key)
+    s_num = _xp_compare_metric_numeric(secondary, key)
+    arrow = _cmp_delta_compare_html(p_num, s_num)
+    p_bar = _xp_compare_mini_bar_html(_xp_compare_metric_numeric(primary, f"{key}_sub_display"))
+    s_bar = _xp_compare_mini_bar_html(_xp_compare_metric_numeric(secondary, f"{key}_sub_display"))
+    return (
+        '<div class="cmp-row cmp-row-primary">'
+        f'<span class="cmp-cell-label cmp-cell-label-strong">{_xp_compare_metric_label_html(label, key)}</span>'
+        f"{_xp_compare_value_cell_html(p_val, mini_bar_html=p_bar)}"
+        f"{_xp_compare_value_cell_html(s_val, arrow_html=arrow, mini_bar_html=s_bar)}"
+        "</div>"
     )
 
 
@@ -1256,17 +1282,17 @@ def _xp_compare_stats_html(
         f'<span class="pa-xp-compare-legend-secondary">{secondary_name}</span>',
         "</div>",
         '<div class="cmp-row cmp-row-head">',
-        "<span>Dimensão</span>",
+        "<span>Métrica</span>",
         f'<span>{primary_name}</span>',
         f'<span>{secondary_name}</span>',
         "</div>",
         '<div class="pa-xp-compare-group pa-xp-compare-group-primary">',
-        '<div class="pa-xp-compare-group-title">Perfil de impacto</div>',
+        '<div class="pa-xp-compare-group-title">Comparação em destaque</div>',
     ]
-    for key in xstats.XP_COMPARE_PROFILE_KEYS:
+    for key in xstats.XP_COMPARE_HIGHLIGHT_KEYS:
         rows.append(
-            _xp_compare_profile_row_html(
-                xstats.XP_PROFILE_BAR_LABELS.get(key, key),
+            _xp_compare_highlight_row_html(
+                xstats.XP_COMPARE_HIGHLIGHT_LABELS.get(key, key),
                 primary,
                 secondary,
                 key,
@@ -1274,7 +1300,7 @@ def _xp_compare_stats_html(
         )
     rows.append("</div>")
     rows.append('<div class="pa-xp-compare-group pa-xp-compare-group-secondary">')
-    rows.append('<div class="pa-xp-compare-group-title">Métricas-chave</div>')
+    rows.append('<div class="pa-xp-compare-group-title">Métricas-Chave</div>')
     for key in xstats.XP_COMPARE_METRIC_KEYS:
         rows.append(
             _xp_compare_metric_row_html(
@@ -1898,11 +1924,13 @@ st.markdown(
         color: #f8fafc;
     }
     .pres-card {
+        position: relative;
         background: linear-gradient(160deg, #151b2b 0%, #101522 100%);
         border: 1px solid #2a3550;
         border-radius: 12px;
         padding: 1rem 1.15rem;
         margin-bottom: 0.85rem;
+        scroll-margin-top: 1rem;
     }
     .pres-card h4 { margin: 0 0 0.35rem 0; color: #e2e8f0; font-size: 1rem; }
     .pres-card p { margin: 0; color: #94a3b8; font-size: 0.88rem; line-height: 1.45; }
@@ -1912,6 +1940,44 @@ st.markdown(
         padding: 1.15rem 1.25rem;
     }
     .pres-card-hero h4 { font-size: 1.12rem; color: #f1f5f9; }
+    .pres-step-num {
+        position: absolute;
+        top: 0.85rem;
+        right: 1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 50%;
+        background: rgba(51, 65, 85, 0.55);
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        color: #cbd5e1;
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+    .pres-step-num-accent {
+        background: rgba(96, 165, 250, 0.2);
+        border-color: rgba(96, 165, 250, 0.55);
+        color: #93c5fd;
+    }
+    .pres-xp-ref {
+        position: relative;
+        color: #93c5fd;
+        font-weight: 700;
+        text-decoration: none;
+        border-bottom: 1px dashed rgba(147, 197, 253, 0.55);
+        padding-bottom: 1px;
+        transition: color 0.14s ease, border-color 0.14s ease;
+    }
+    .pres-xp-ref:hover { color: #bfdbfe; border-color: #bfdbfe; }
+    .pres-xp-ref-mark {
+        font-size: 0.6em;
+        font-weight: 700;
+        vertical-align: super;
+        margin-left: 1px;
+        color: #60a5fa;
+    }
     .pres-cards-row {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -2110,6 +2176,7 @@ st.markdown(
     }
     .pres-calc-list strong { color: #e2e8f0; font-weight: 600; }
     .pres-about-card {
+        position: relative;
         display: flex;
         align-items: flex-start;
         gap: 1rem;
@@ -2118,6 +2185,7 @@ st.markdown(
         border-radius: 14px;
         padding: 1.1rem 1.25rem;
         margin-bottom: 0.85rem;
+        scroll-margin-top: 1rem;
     }
     .pres-about-icon {
         flex: none;
@@ -3852,6 +3920,75 @@ st.markdown(
         background: linear-gradient(160deg, rgba(74, 222, 128, 0.16) 0%, rgba(15, 23, 42, 0.55) 100%);
     }
     .pa-xp-index-above .pa-xp-index-tier { color: #4ade80; }
+    .pa-xp-badge-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        margin-top: 0.4rem;
+    }
+    .pa-xp-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.5rem 0.6rem;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        background: rgba(15, 23, 42, 0.55);
+        cursor: help;
+        transition: transform 0.14s ease, border-color 0.14s ease;
+    }
+    .pa-xp-badge:hover { transform: translateY(-1px); }
+    .pa-xp-badge-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.85rem;
+        height: 1.85rem;
+        border-radius: 9px;
+        font-size: 0.82rem;
+        flex-shrink: 0;
+    }
+    .pa-xp-badge-body {
+        display: flex;
+        flex-direction: column;
+        gap: 0.06rem;
+        min-width: 0;
+        flex: 1;
+    }
+    .pa-xp-badge-name { color: #e2e8f0; font-size: 0.74rem; font-weight: 700; }
+    .pa-xp-badge-cap {
+        color: #7c8aa5;
+        font-size: 0.62rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+    }
+    .pa-xp-badge-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+    }
+    .pa-xp-badge-earned {
+        border-color: rgba(74, 222, 128, 0.55);
+        background: linear-gradient(160deg, rgba(74, 222, 128, 0.16) 0%, rgba(15, 23, 42, 0.55) 100%);
+    }
+    .pa-xp-badge-earned .pa-xp-badge-icon {
+        background: rgba(74, 222, 128, 0.2);
+        color: #4ade80;
+    }
+    .pa-xp-badge-earned .pa-xp-badge-status { color: #4ade80; }
+    .pa-xp-badge-locked {
+        border-color: rgba(51, 65, 85, 0.6);
+        opacity: 0.72;
+    }
+    .pa-xp-badge-locked .pa-xp-badge-icon {
+        background: rgba(51, 65, 85, 0.35);
+        color: #64748b;
+    }
+    .pa-xp-badge-locked .pa-xp-badge-status { color: #64748b; }
     .pa-xp-gradient-bar-row {
         display: flex;
         flex-direction: column;
@@ -6386,6 +6523,31 @@ def _xp_profile_bars_html(xp_profile: dict | None) -> str:
     return f'<div class="pa-xp-profile-bars">{rows}</div>'
 
 
+def _xp_badge_row_html(xp_profile: dict, badge_spec: tuple) -> str:
+    badge_key, label, caption, _metrics, icon = badge_spec
+    earned = bool(xp_profile.get(f"{badge_key}_earned"))
+    above = int(xp_profile.get(f"{badge_key}_above_count") or 0)
+    total = int(xp_profile.get(f"{badge_key}_metric_count") or 0)
+    tip = xstats.XP_BADGE_TOOLTIPS.get(badge_key, "")
+    state = "earned" if earned else "locked"
+    if earned:
+        status_icon = '<i class="fa-solid fa-circle-check"></i>'
+        status_text = "Acima da média"
+    else:
+        status_icon = '<i class="fa-regular fa-circle"></i>'
+        status_text = f"{above} de {total}" if total else "—"
+    return (
+        f'<div class="pa-xp-badge pa-xp-badge-{state}" title="{html.escape(tip, quote=True)}">'
+        f'<span class="pa-xp-badge-icon"><i class="fa-solid {html.escape(icon)}"></i></span>'
+        '<span class="pa-xp-badge-body">'
+        f'<span class="pa-xp-badge-name">{html.escape(label)}</span>'
+        f'<span class="pa-xp-badge-cap">{html.escape(caption)}</span>'
+        "</span>"
+        f'<span class="pa-xp-badge-status">{status_icon}<span>{html.escape(status_text)}</span></span>'
+        "</div>"
+    )
+
+
 def _xp_index_boxes_html(xp_profile: dict | None) -> str:
     if not xp_profile or not xp_profile.get("xp_profile_bars_eligible", True):
         return ""
@@ -6402,14 +6564,20 @@ def _xp_index_boxes_html(xp_profile: dict | None) -> str:
             f'<span class="pa-xp-index-tier">{html.escape(tier_label)}</span>'
             "</div>"
         )
-    if not boxes:
+    badges = [
+        _xp_badge_row_html(xp_profile, spec)
+        for spec in xstats.XP_BADGE_SPECS
+        if xp_profile.get(f"{spec[0]}_metric_count") is not None
+    ]
+    if not boxes and not badges:
         return ""
-    return (
-        '<div class="pa-xp-index-wrap">'
-        '<div class="pa-xp-index-title">Índices xP</div>'
-        f'<div class="pa-xp-index-grid">{"".join(boxes)}</div>'
-        "</div>"
-    )
+    sections = ['<div class="pa-xp-index-wrap">', '<div class="pa-xp-index-title">Índices xP</div>']
+    if boxes:
+        sections.append(f'<div class="pa-xp-index-grid">{"".join(boxes)}</div>')
+    if badges:
+        sections.append(f'<div class="pa-xp-badge-list">{"".join(badges)}</div>')
+    sections.append("</div>")
+    return "".join(sections)
 
 
 def _xp_profile_archetype_html(xp_profile: dict | None, *, as_title: bool = False) -> str:
@@ -9127,9 +9295,30 @@ def render_presentation_tab(
 ) -> None:
     _ = (all_players, passes_by_player, players_by_id, pool_by_position, rated, xp_players)
 
+    xp_ref = (
+        '<a class="pres-xp-ref" href="#pres-xp-card" title="Veja o card 2: o que é o xP">'
+        'xP<span class="pres-xp-ref-mark">2</span></a>'
+    )
+
     st.markdown(
-        '<div class="pres-card pres-card-hero">'
-        f"<h4>{html.escape(APP_NAME)} · xP</h4>"
+        '<div class="pres-about-card">'
+        '<span class="pres-step-num">1</span>'
+        '<span class="pres-about-icon"><i class="fa-solid fa-people-group"></i></span>'
+        "<div class='pres-about-body'>"
+        "<h4>O que é o dashboard</h4>"
+        "<p>Uma ferramenta de <strong>análise por posição</strong> dos atletas: cada jogador é "
+        "avaliado pelo seu perfil de passe e comparado apenas com outros da mesma função em campo.</p>"
+        f"<p>Assim, o {xp_ref} revela quem realmente se destaca dentro do próprio papel tático — de "
+        "zagueiros que constroem a saída de bola a meias e pontas que criam as jogadas decisivas.</p>"
+        "</div>"
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<div class="pres-card pres-card-hero" id="pres-xp-card">'
+        '<span class="pres-step-num pres-step-num-accent">2</span>'
+        f"<h4>O que é o {html.escape(APP_NAME)} · xP</h4>"
         "<ul class='pres-hero-list'>"
         "<li>O <em>xP (Expected Pass)</em> tem como objetivo definir um valor para cada passe "
         "realizado por um atleta.</li>"
@@ -9145,6 +9334,7 @@ def render_presentation_tab(
 
     st.markdown(
         '<div class="pres-card">'
+        '<span class="pres-step-num">3</span>'
         "<h4>Como o xP é calculado</h4>"
         "<ul class='pres-calc-list'>"
         "<li><strong>Campo em células</strong> — grades 12×8 de origem e destino.</li>"
@@ -9152,20 +9342,6 @@ def render_presentation_tab(
         "<li><strong>Progressão</strong> — avanço ao gol aumenta; recuo e lateral reduzem.</li>"
         "<li><strong>Acessibilidade</strong> — passes fáceis no setor defensivo são descontados.</li>"
         "</ul>"
-        "</div>",
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(
-        '<div class="pres-about-card">'
-        '<span class="pres-about-icon"><i class="fa-solid fa-people-group"></i></span>'
-        "<div class='pres-about-body'>"
-        "<h4>O que é o dashboard</h4>"
-        "<p>Uma ferramenta de <strong>análise por posição</strong> dos atletas: cada jogador é "
-        "avaliado pelo seu perfil de passe e comparado apenas com outros da mesma função em campo.</p>"
-        "<p>Assim, o xP revela quem realmente se destaca dentro do próprio papel tático — de "
-        "zagueiros que constroem a saída de bola a meias e pontas que criam as jogadas decisivas.</p>"
-        "</div>"
         "</div>",
         unsafe_allow_html=True,
     )

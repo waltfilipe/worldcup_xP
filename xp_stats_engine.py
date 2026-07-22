@@ -625,10 +625,8 @@ XP_PROFILE_SUBMETRICS: tuple[str, ...] = (
 # Secondary indices shown as coloured status boxes below the regular stats.
 # (index_key, label, metrics, invert_metrics)
 XP_INDEX_SPECS: tuple[tuple[str, str, tuple[str, ...], tuple[str, ...]], ...] = (
-    ("xp_idx_surprise", "Surpresa", ("xp_residual_median",), ()),
+    ("xp_idx_surprise", "Superação", ("xp_residual_median",), ()),
     ("xp_idx_consistency", "Consistência", ("xp_game_std_adj_score",), ()),
-    ("xp_idx_creative", "Criativo", ("xp_final_third_share", "xp_box_share"), ()),
-    ("xp_idx_builder", "Construtor", ("xp_from_deep_share", "xp_line_break_total"), ()),
 )
 
 XP_INDEX_TIER_LABELS: dict[str, str] = {
@@ -640,40 +638,75 @@ XP_INDEX_TIER_LABELS: dict[str, str] = {
 XP_INDEX_TOOLTIPS: dict[str, str] = {
     "xp_idx_surprise": "Quanto o jogador entrega acima do valor esperado pelo modelo (resíduo mediano).",
     "xp_idx_consistency": "Estabilidade do xP de jogo para jogo.",
-    "xp_idx_creative": "Volume de xP criado no terço final e na área.",
-    "xp_idx_builder": "Construção a partir do campo defensivo e passes que quebram linhas.",
+}
+
+# Achievement badges — earned when the player is above the position median on
+# BOTH metrics of the pair. (badge_key, label, metric_caption, metrics, icon)
+XP_BADGE_SPECS: tuple[tuple[str, str, str, tuple[str, ...], str], ...] = (
+    ("xp_badge_impact", "Impacto xP", "xP/Jogo · xP/Passe", ("xp_per_90", "xp_m4_per_pass"), "fa-bolt"),
+    (
+        "xp_badge_threat",
+        "Ameaça",
+        "Threat/Jogo · xP/Threat",
+        ("threat_passes_p90", "xp_m4_per_threat_pass"),
+        "fa-crosshairs",
+    ),
+)
+
+XP_BADGE_TOOLTIPS: dict[str, str] = {
+    "xp_badge_impact": "Acima da média da posição em xP por jogo e em xP por passe.",
+    "xp_badge_threat": (
+        "Acima da média da posição em passes threat por jogo e em xP por passe threat."
+    ),
 }
 
 # Player Analysis compare panel.
-# Primary dimensions (more emphasis) = the four profile bars.
-XP_COMPARE_PROFILE_KEYS: tuple[str, ...] = (
-    "xp_activity_display",
-    "xp_edge_display",
-    "xp_quality_display",
-    "xp_consistency_display",
-)
-# Secondary metrics (less emphasis) = headline xP + progression stats.
-XP_COMPARE_METRIC_KEYS: tuple[str, ...] = (
+# Highlighted comparison metrics (more emphasis, with mini-bars).
+XP_COMPARE_HIGHLIGHT_KEYS: tuple[str, ...] = (
     "xp_per_90",
+    "threat_passes_p90",
     "xp_m4_per_pass",
-    "progressive_passes",
-    "final_third_passes",
+    "xp_m4_per_threat_pass",
 )
-XP_COMPARE_METRIC_LABELS: dict[str, str] = {
+XP_COMPARE_HIGHLIGHT_LABELS: dict[str, str] = {
     "xp_per_90": "xP (Por jogo)",
+    "threat_passes_p90": "Threat (Por jogo)",
     "xp_m4_per_pass": "xP/Passe",
-    "progressive_passes": "Progressivos",
-    "final_third_passes": "Terço Final",
+    "xp_m4_per_threat_pass": "xP/Threat",
 }
-XP_COMPARE_METRIC_TOOLTIPS: dict[str, str] = {
+XP_COMPARE_HIGHLIGHT_TOOLTIPS: dict[str, str] = {
     "xp_per_90": (
-        "Volume de xP gerado por passe, normalizado por 90 minutos — "
+        "Volume de xP gerado, normalizado por 90 minutos — "
         "quanto valor ofensivo o jogador produz por jogo."
+    ),
+    "threat_passes_p90": (
+        "Passes threat produzidos por 90 minutos — volume de passes que "
+        "criam perigo real."
     ),
     "xp_m4_per_pass": (
         "xP médio por passe — mede a eficiência de cada entrega, "
         "independente do volume."
     ),
+    "xp_m4_per_threat_pass": (
+        "xP médio nos passes threat — a qualidade dos passes de perigo "
+        "produzidos."
+    ),
+}
+# Secondary key metrics (less emphasis) = traditional volume stats.
+XP_COMPARE_METRIC_KEYS: tuple[str, ...] = (
+    "passes_total",
+    "progressive_passes",
+    "final_third_passes",
+    "key_passes",
+)
+XP_COMPARE_METRIC_LABELS: dict[str, str] = {
+    "passes_total": "Passes",
+    "progressive_passes": "Progressivos",
+    "final_third_passes": "Terço Final",
+    "key_passes": "Passes Chave",
+}
+XP_COMPARE_METRIC_TOOLTIPS: dict[str, str] = {
+    "passes_total": "Passes tentados por jogo (p90).",
     "progressive_passes": (
         "Passes progressivos completados por jogo (p90) — critério Wyscout: "
         "avanço ≥ 10 m em direção ao gol, ou ≥ 5 m dentro do terço final."
@@ -681,6 +714,10 @@ XP_COMPARE_METRIC_TOOLTIPS: dict[str, str] = {
     "final_third_passes": (
         "Passes completados com destino no terço final (x ≥ 80 m) por jogo (p90) — "
         "volume de entregas na zona de criação."
+    ),
+    "key_passes": (
+        "Passes que geram finalização por jogo (p90) — entregas que resultam "
+        "em chute."
     ),
 }
 
@@ -1332,6 +1369,10 @@ def _clear_xp_profile_bar_scores(row: dict) -> None:
     for idx_key, _lbl, _metrics, _inv in XP_INDEX_SPECS:
         row.pop(idx_key, None)
         row.pop(f"{idx_key}_tier", None)
+    for badge_key, _lbl, _cap, _metrics, _icon in XP_BADGE_SPECS:
+        row.pop(f"{badge_key}_earned", None)
+        row.pop(f"{badge_key}_above_count", None)
+        row.pop(f"{badge_key}_metric_count", None)
     row.pop("xp_profile_archetype", None)
     row.pop("xp_profile_archetype_label", None)
     row.pop("xp_profile_archetype_description", None)
@@ -1521,6 +1562,29 @@ def _attach_secondary_indices(eligible_rows: list[dict]) -> None:
             else:
                 tier = "below"
             row[f"{idx_key}_tier"] = tier
+
+    # Achievement badges: earned when above the position median on both metrics.
+    badge_medians: dict[str, float | None] = {}
+    for _key, _label, _cap, metrics, _icon in XP_BADGE_SPECS:
+        for metric in metrics:
+            if metric not in badge_medians:
+                col = pd.to_numeric(edf.get(metric), errors="coerce")
+                badge_medians[metric] = float(col.median()) if col.notna().any() else None
+    for row in eligible_rows:
+        for badge_key, _label, _cap, metrics, _icon in XP_BADGE_SPECS:
+            above_count = 0
+            valid = True
+            for metric in metrics:
+                median = badge_medians.get(metric)
+                value = row.get(metric)
+                if median is None or value is None:
+                    valid = False
+                    break
+                if float(value) > median:
+                    above_count += 1
+            row[f"{badge_key}_earned"] = bool(valid and above_count == len(metrics))
+            row[f"{badge_key}_above_count"] = int(above_count)
+            row[f"{badge_key}_metric_count"] = len(metrics)
 
 
 def _xp_pass_rating_shrink_sample(feature_key: str, player: dict) -> float:
