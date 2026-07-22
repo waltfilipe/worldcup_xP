@@ -173,6 +173,15 @@ MAPS_REGULAR_PASS_OPTIONS: tuple[tuple[str, str], ...] = (
     ("into_box", "Passes para área"),
 )
 MAPS_SPECIAL_PASS_OPTIONS: tuple[tuple[str, str], ...] = (
+    ("xp_threat_all", "xP Threat Passes"),
+    (
+        "xp_threat_short",
+        f"xP Threat Passes · Short ({DISTANCE_BAND_LABELS['short']})",
+    ),
+    (
+        "xp_threat_long",
+        f"xP Threat Passes · Long ({DISTANCE_BAND_LABELS['long']})",
+    ),
     ("diagonal_long", "Diagonais Longas"),
     ("line_break", "Passes Quebra Linha"),
     ("inversion", "Inversões"),
@@ -210,12 +219,30 @@ def is_maps_special_pass(filter_key: str) -> bool:
     return str(filter_key) in MAPS_SPECIAL_PASS_TYPE_KEYS
 
 
+def _xp_threat_map_band(filter_key: str) -> str | None:
+    key = str(filter_key or "").strip()
+    if key == "xp_threat_all":
+        return "all"
+    if key == "xp_threat_short":
+        return "short"
+    if key == "xp_threat_long":
+        return "long"
+    return None
+
+
+def is_maps_xp_threat_pass(filter_key: str) -> bool:
+    return _xp_threat_map_band(filter_key) is not None
+
+
 def filter_passes_for_map(passes: pd.DataFrame, filter_key: str) -> pd.DataFrame:
     """Return completed passes matching a Maps pass-type selection."""
     work = _completed_pass_frame(passes)
     if work.empty:
         return work
     key = str(filter_key or "").strip()
+    threat_band = _xp_threat_map_band(key)
+    if threat_band is not None:
+        return filter_passes_by_threat_type(work, threat_band)
     if key == "into_final_third":
         x_end = work["x_end"].to_numpy(dtype=float)
         return work.loc[x_end >= pe.FINAL_THIRD_LINE_X].copy()

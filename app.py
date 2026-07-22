@@ -8342,8 +8342,13 @@ def render_maps_section(
         map_col, dest_col = st.columns(2, gap="small")
         with map_col:
             st.pyplot(fig_passes, clear_figure=True, use_container_width=True)
+            pass_kind = (
+                "xP threat passes"
+                if xstats.is_maps_xp_threat_pass(map_filter_key)
+                else "passes completos"
+            )
             st.caption(
-                f"{len(work)} passes completos · cor do passe = xP (cinza → vermelho forte)"
+                f"{len(work)} {pass_kind} · cor do passe = xP (cinza → vermelho forte)"
             )
         with dest_col:
             st.pyplot(fig_dest, clear_figure=True, use_container_width=True)
