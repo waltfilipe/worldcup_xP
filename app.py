@@ -1531,8 +1531,8 @@ def _pillar_radar_card_html(player: dict, **kwargs) -> str:
         "</div>"
     )
 
-APP_NAME = "Pass Scout"
-APP_LEAGUE = "Copa do Mundo"
+APP_NAME = "World Cup"
+APP_LEAGUE = "xP (Expected Passes) Analysis"
 PRES_DEMO_KEY = "pres_active_demo"
 FONT_AWESOME_CDN = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 PLAYER_ANALYSIS_CARD_HEIGHT_PX = 620
