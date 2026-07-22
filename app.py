@@ -7402,7 +7402,7 @@ def render_xp_season_rankings(xp_players: list[dict]) -> None:
     st.markdown("### xP M4 — Copa do Mundo")
     st.caption(
         f"Modelo 4 (origem 12×8 → destino 12×8) · Superfície sazonal do time · "
-        f"Threat = top {int(xe.THREAT_QUANTILE * 100)}% do resíduo (progressão ≥ 0) · "
+        f"Threat = top {int(xe.THREAT_QUANTILE * 100)}% resíduo + xP ≥ P{int(xe.THREAT_XP_QUANTILE * 100)} na distância · "
         f"{meta.get('passes', '—'):,} passes · "
         f"{meta.get('threats', '—'):,} xP threat passes"
         if meta

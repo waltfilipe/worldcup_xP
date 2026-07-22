@@ -929,9 +929,9 @@ XP_PA_LABELS: dict[str, str] = {
 
 XP_PA_TOOLTIPS: dict[str, str] = {
     "xp_per_90": "Volume de xP gerado por passe, normalizado por 90 minutos.",
-    "threat_passes_p90": "Quantidade de passes threat (alto potencial ofensivo) por jogo.",
+    "threat_passes_p90": "Passes threat por jogo — resíduo no top 10% da distância e xP ≥ P75 na mesma faixa.",
     "xp_m4_per_pass": "xP médio por passe — mede a eficiência de cada entrega.",
-    "xp_m4_per_threat_pass": "xP médio apenas nos passes classificados como threat.",
+    "xp_m4_per_threat_pass": "xP médio nos passes threat (surpresa + valor alto na distância).",
     "xp_m4_threat_rate": "Percentual de passes que são threat no total de passes.",
     "xp_residual_median": "Mediana do resíduo (xP real − esperado) por passe, ×100. Valores positivos indicam passes melhores que o modelo prevê.",
     "xp_surprise_rate": "Percentual de passes com resíduo positivo — passes que superam a expectativa do modelo.",

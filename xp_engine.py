@@ -16,7 +16,7 @@ from sklearn.pipeline import Pipeline
 import passes_engine as pe
 import xp_study_engine as xse
 
-XP_DATA_CACHE_VERSION = 35
+XP_DATA_CACHE_VERSION = 36
 XP_POSITION_RANK_METRICS: tuple[str, ...] = (
     "xp_m4_total",
     "xp_m4_per_pass",
@@ -27,8 +27,9 @@ XP_POSITION_RANK_METRICS: tuple[str, ...] = (
     "xp_m4_total_long",
     "xp_m4_threat_long_p90",
 )
-XP_MODEL_VERSION = "m4_od_12x8_b4_a2_pr0_global_ita_laliga_dist30_access_ridge_v6"
+XP_MODEL_VERSION = "m4_od_12x8_b4_a2_pr0_global_ita_laliga_dist30_access_ridge_v7"
 THREAT_QUANTILE = 0.10
+THREAT_XP_QUANTILE = 0.75
 THREAT_PROGRESS_MIN = 0.0
 XP_COL = "xp_m4"
 XP_SPATIAL_COL = "xp_hier_od"
@@ -286,20 +287,27 @@ def _fit_artifacts_on_passes(train_passes: pd.DataFrame) -> dict:
     train[XP_EXPECTED_COL] = _expected_xp_from_model(model, train)
     train[XP_RESIDUAL_COL] = train[XP_COL].to_numpy(dtype=float) - train[XP_EXPECTED_COL]
 
-    thresholds: dict[str, float] = {}
+    residual_thresholds: dict[str, float] = {}
+    xp_thresholds: dict[str, float] = {}
     for band in BANDS:
         sub = train[train["distance_band"] == band]
         if sub.empty:
-            thresholds[band] = 0.0
+            residual_thresholds[band] = 0.0
+            xp_thresholds[band] = 0.0
         else:
-            thresholds[band] = float(sub[XP_RESIDUAL_COL].quantile(1.0 - THREAT_QUANTILE))
+            residual_thresholds[band] = float(sub[XP_RESIDUAL_COL].quantile(1.0 - THREAT_QUANTILE))
+            xp_thresholds[band] = float(sub[XP_COL].quantile(THREAT_XP_QUANTILE))
 
     meta = {
         "version": XP_MODEL_VERSION,
+        "threat_rule": "residual_top10pct_and_xp_p75_per_band",
         "threat_quantile": THREAT_QUANTILE,
+        "threat_xp_quantile": THREAT_XP_QUANTILE,
         "threat_progress_min": THREAT_PROGRESS_MIN,
-        "residual_thresholds": thresholds,
-        "residual_threshold_labels": {BAND_LABELS[k]: v for k, v in thresholds.items()},
+        "residual_thresholds": residual_thresholds,
+        "residual_threshold_labels": {BAND_LABELS[k]: v for k, v in residual_thresholds.items()},
+        "xp_thresholds": xp_thresholds,
+        "xp_threshold_labels": {BAND_LABELS[k]: v for k, v in xp_thresholds.items()},
         "progress_floor_mult": xse.XP_PROGRESS_FLOOR_MULT,
         "progress_logistic_k": xse.XP_PROGRESS_LOGISTIC_K,
         "blend_alpha": xse.XP_BLEND_ALPHA,
@@ -351,12 +359,26 @@ def fit_and_save_artifacts(*, force: bool = False) -> dict:
     return _fit_artifacts_on_passes(league_passes)
 
 
-def load_threat_thresholds() -> dict[str, float]:
+def load_threat_meta() -> dict:
     if not THREAT_THRESHOLDS_PATH.exists():
         fit_and_save_artifacts()
     with open(THREAT_THRESHOLDS_PATH, encoding="utf-8") as fh:
-        meta = json.load(fh)
+        return json.load(fh)
+
+
+def load_threat_thresholds() -> dict[str, float]:
+    meta = load_threat_meta()
     return {str(k): float(v) for k, v in meta["residual_thresholds"].items()}
+
+
+def load_threat_xp_thresholds() -> dict[str, float]:
+    meta = load_threat_meta()
+    xp_thresholds = meta.get("xp_thresholds")
+    if not xp_thresholds:
+        fit_and_save_artifacts(force=True)
+        meta = load_threat_meta()
+        xp_thresholds = meta.get("xp_thresholds") or {}
+    return {str(k): float(v) for k, v in xp_thresholds.items()}
 
 
 def load_expected_model() -> Pipeline:
@@ -375,18 +397,23 @@ def apply_expected_and_threat(passes: pd.DataFrame) -> pd.DataFrame:
         return out
 
     model = load_expected_model()
-    thresholds = load_threat_thresholds()
+    residual_thresholds = load_threat_thresholds()
+    xp_thresholds = load_threat_xp_thresholds()
     sub_idx = out.index[mask]
     sub = out.loc[mask]
     expected = _expected_xp_from_model(model, sub)
     residual = sub[XP_COL].to_numpy(dtype=float) - expected
+    xp_values = sub[XP_COL].to_numpy(dtype=float)
     out.loc[sub_idx, XP_EXPECTED_COL] = expected
     out.loc[sub_idx, XP_RESIDUAL_COL] = residual
 
     threat_flags = np.zeros(len(sub), dtype=bool)
     bands = sub["distance_band"].astype(str).to_numpy()
     for i, band in enumerate(bands):
-        threat_flags[i] = residual[i] > thresholds.get(band, np.inf)
+        threat_flags[i] = (
+            residual[i] > residual_thresholds.get(band, np.inf)
+            and xp_values[i] >= xp_thresholds.get(band, np.inf)
+        )
     if THREAT_PROGRESS_MIN is not None:
         progress = _progress_ratio_array(sub)
         threat_flags &= progress >= THREAT_PROGRESS_MIN
