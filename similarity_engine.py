@@ -114,11 +114,11 @@ SIMILARITY_WEIGHTS_C: dict[str, float] = {
 }
 
 SIMILARITY_METRIC_LABELS: dict[str, str] = {
-    "impact_passes_p90": "Threat Passes",
+    "impact_passes_p90": "Impact Passes",
     "impact_per_pass": "Average Pass Threat",
     "risk_passes_p90": "Risk Passes",
     "risk_pass_pct": "% Risk Passes",
-    "threat_pass_pct": "Threat Pass Rate",
+    "threat_pass_pct": "Impact Pass Rate",
     "positive_dxt_pct": "% Passes with Positive ΔxT (+0.15)",
     "dist_short_impact_p90": "< 12 m",
     "dist_medium_impact_p90": "12–25 m",

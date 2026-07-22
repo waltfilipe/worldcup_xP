@@ -197,14 +197,14 @@ def draw_threat_actions_map(
     pass_subset = _threat_passes(passes)
     carry_subset = _threat_carries(carries)
     if (pass_subset is None or pass_subset.empty) and (carry_subset is None or carry_subset.empty):
-        ax.text(60, 40, "No threat actions", ha="center", va="center", color="white", fontsize=9)
+        ax.text(60, 40, "No impact actions", ha="center", va="center", color="white", fontsize=9)
     else:
         _draw_action_arrows(pitch, ax, pass_subset, COLOR_PASS_THREAT, scale, alpha=0.78)
         _draw_action_arrows(pitch, ax, carry_subset, COLOR_CARRY_THREAT, scale, alpha=0.78)
 
     legend_handles = [
-        Line2D([0], [0], color=COLOR_PASS_THREAT, lw=1.4 * scale, label="Threat pass", alpha=0.85),
-        Line2D([0], [0], color=COLOR_CARRY_THREAT, lw=1.4 * scale, label="Threat carry", alpha=0.85),
+        Line2D([0], [0], color=COLOR_PASS_THREAT, lw=1.4 * scale, label="Impact pass", alpha=0.85),
+        Line2D([0], [0], color=COLOR_CARRY_THREAT, lw=1.4 * scale, label="Impact carry", alpha=0.85),
     ]
     leg = ax.legend(
         handles=legend_handles,

@@ -153,14 +153,14 @@ def _is_long_pass(scored: pd.DataFrame, dist: np.ndarray) -> np.ndarray:
 
 
 SPECIAL_PASS_MAP_FILTERS: tuple[tuple[str, str], ...] = (
-    ("progressive", "Passes Progressivos"),
-    ("diagonal_long", "Diagonal Longa"),
-    ("line_break", "Quebra linha"),
-    ("inversion", "Inversões"),
-    ("cross", "Cruzamento"),
-    ("from_deep", "xP from deep"),
-    ("final_third", "% xP no terço final"),
-    ("in_box", "% xP na área"),
+    ("progressive", "Progressive Passes"),
+    ("diagonal_long", "Long Diagonal"),
+    ("line_break", "Line Break"),
+    ("inversion", "Inversions"),
+    ("cross", "Cross"),
+    ("from_deep", "xP from Deep"),
+    ("final_third", "% xP in Final Third"),
+    ("in_box", "% xP in Box"),
 )
 SPECIAL_PASS_MAP_FILTER_KEYS: tuple[str, ...] = tuple(key for key, _label in SPECIAL_PASS_MAP_FILTERS)
 SPECIAL_PASS_MAP_FILTER_LABELS: dict[str, str] = dict(SPECIAL_PASS_MAP_FILTERS)
@@ -168,19 +168,19 @@ SPECIAL_PASS_COUNT_KEYS: tuple[str, ...] = SPECIAL_PASS_MAP_FILTER_KEYS
 
 # Maps tab — selectable pass types grouped by stat type.
 MAPS_REGULAR_PASS_OPTIONS: tuple[tuple[str, str], ...] = (
-    ("progressive", "Passes Progressivos"),
-    ("into_final_third", "Passes para terço final"),
-    ("into_box", "Passes para área"),
+    ("progressive", "Progressive Passes"),
+    ("into_final_third", "Passes into Final Third"),
+    ("into_box", "Passes into Box"),
 )
 MAPS_SPECIAL_PASS_OPTIONS: tuple[tuple[str, str], ...] = (
-    ("xp_threat_all", "xP Threat Passes"),
+    ("xp_threat_all", "xP Impact Passes"),
     (
         "xp_threat_short",
-        f"xP Threat Passes · Short ({DISTANCE_BAND_LABELS['short']})",
+        f"xP Impact Passes · Short ({DISTANCE_BAND_LABELS['short']})",
     ),
     (
         "xp_threat_long",
-        f"xP Threat Passes · Long ({DISTANCE_BAND_LABELS['long']})",
+        f"xP Impact Passes · Long ({DISTANCE_BAND_LABELS['long']})",
     ),
 )
 MAPS_STAT_TYPE_OPTIONS: tuple[tuple[str, str], ...] = (
@@ -512,7 +512,7 @@ def apply_per90_metrics(metrics: dict[str, float | int], minutes: float | None) 
 
 # (section_title, metric_keys)
 XP_STATS_SECTIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
-    ("Totais", (
+    ("Totals", (
         "xp_per_90", "xp_m4_per_pass", "xp_m4_threat_rate",
     )),
     ("Special Stats", (
@@ -524,10 +524,10 @@ XP_STATS_SECTIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
         "xp_box_share", "threat_in_box_p90",
         "xp_from_deep", "threat_from_deep_p90",
     )),
-    ("Qualidade", (
+    ("Quality", (
         "xp_residual_median", "xp_surprise_rate",
     )),
-    ("Consistência", (
+    ("Consistency", (
         "xp_game_mean", "xp_game_std_adj_score", "xp_games_above_median_pct",
     )),
     (f"Short ({DISTANCE_BAND_LABELS['short']})", (
@@ -544,16 +544,16 @@ XP_PLAYER_ANALYSIS_BLOCKS: tuple[tuple[str, tuple[str, ...]], ...] = (
         "xp_per_90",
         "threat_passes_p90",
     )),
-    ("Efetividade", (
+    ("Effectiveness", (
         "xp_m4_per_pass",
         "xp_m4_per_threat_pass",
         "xp_m4_threat_rate",
     )),
-    ("Qualidade", (
+    ("Quality", (
         "xp_residual_median",
         "xp_surprise_rate",
     )),
-    ("Consistência", (
+    ("Consistency", (
         "xp_game_std_adj_score",
         "xp_games_above_median_pct",
     )),
@@ -597,10 +597,10 @@ XP_ARCHETYPE_AXIS_KEYS: tuple[str, ...] = (
 )
 
 XP_PROFILE_BAR_LABELS: dict[str, str] = {
-    "xp_activity_display": "Impacto Geral",
-    "xp_edge_display": "Impacto por Passe",
-    "xp_quality_display": "Entrega vs Esperado",
-    "xp_consistency_display": "Consistência",
+    "xp_activity_display": "Overall Impact",
+    "xp_edge_display": "Impact per Pass",
+    "xp_quality_display": "Delivery vs Expected",
+    "xp_consistency_display": "Consistency",
 }
 
 XP_PROFILE_BAR_METRICS: dict[str, tuple[str, ...]] = {
@@ -621,17 +621,17 @@ XP_PROFILE_SUBMETRICS: tuple[str, ...] = (
 # Secondary indices shown as coloured status boxes below the regular stats.
 # (index_key, label, metrics, invert_metrics)
 XP_INDEX_SPECS: tuple[tuple[str, str, tuple[str, ...], tuple[str, ...]], ...] = (
-    ("xp_idx_consistency", "Consistência", ("xp_game_std_adj_score",), ()),
+    ("xp_idx_consistency", "Consistency", ("xp_game_std_adj_score",), ()),
 )
 
 XP_INDEX_TIER_LABELS: dict[str, str] = {
-    "below": "Abaixo da média",
-    "mid": "Mediano",
-    "above": "Acima da média",
+    "below": "Below average",
+    "mid": "Average",
+    "above": "Above average",
 }
 
 XP_INDEX_TOOLTIPS: dict[str, str] = {
-    "xp_idx_consistency": "Estabilidade do xP de jogo para jogo — quão constante é o desempenho do atleta.",
+    "xp_idx_consistency": "Game-to-game xP stability — how consistent the player's delivery is.",
 }
 
 # Icons for the index rows (tier indices + badges) shown in the xP Profile card.
@@ -643,13 +643,13 @@ XP_INDEX_ICONS: dict[str, str] = {
 # composite of the badge metrics. (badge_key, label, metrics, icon)
 XP_BADGE_TOP_SIZE = 25
 XP_BADGE_SPECS: tuple[tuple[str, str, tuple[str, ...], str], ...] = (
-    ("xp_badge_impact", "Impacto", ("xp_per_90", "xp_m4_per_pass"), "fa-bolt"),
-    ("xp_badge_threat", "Ameaça", ("threat_passes_p90", "xp_m4_per_threat_pass"), "fa-crosshairs"),
+    ("xp_badge_impact", "Impact", ("xp_per_90", "xp_m4_per_pass"), "fa-bolt"),
+    ("xp_badge_threat", "Impact Passes", ("threat_passes_p90", "xp_m4_per_threat_pass"), "fa-crosshairs"),
 )
 
 XP_BADGE_TOOLTIPS: dict[str, str] = {
-    "xp_badge_impact": "Destaque na posição em xP por jogo e em xP por passe.",
-    "xp_badge_threat": "Destaque na posição em passes threat por jogo e em xP por passe threat.",
+    "xp_badge_impact": "Top 25 at the position in xP per game and xP per pass.",
+    "xp_badge_threat": "Top 25 at the position in impact passes per game and xP per impact pass.",
 }
 
 # Player Analysis compare panel.
@@ -661,27 +661,25 @@ XP_COMPARE_HIGHLIGHT_KEYS: tuple[str, ...] = (
     "xp_m4_per_threat_pass",
 )
 XP_COMPARE_HIGHLIGHT_LABELS: dict[str, str] = {
-    "xp_per_90": "xP (Por jogo)",
-    "threat_passes_p90": "Threat (Por jogo)",
-    "xp_m4_per_pass": "xP/Passe",
-    "xp_m4_per_threat_pass": "xP/Threat",
+    "xp_per_90": "xP (Per game)",
+    "threat_passes_p90": "Impact Passes (Per game)",
+    "xp_m4_per_pass": "xP/Pass",
+    "xp_m4_per_threat_pass": "xP/Impact Pass",
 }
 XP_COMPARE_HIGHLIGHT_TOOLTIPS: dict[str, str] = {
     "xp_per_90": (
-        "Volume de xP gerado, normalizado por 90 minutos — "
-        "quanto valor ofensivo o jogador produz por jogo."
+        "xP volume normalized per 90 minutes — how much offensive value the player "
+        "produces per game."
     ),
     "threat_passes_p90": (
-        "Passes threat produzidos por 90 minutos — volume de passes que "
-        "criam perigo real."
+        "Impact passes produced per 90 minutes — volume of passes that create real danger."
     ),
     "xp_m4_per_pass": (
-        "xP médio por passe — mede a eficiência de cada entrega, "
-        "independente do volume."
+        "Average xP per pass — measures the efficiency of each delivery, "
+        "independent of volume."
     ),
     "xp_m4_per_threat_pass": (
-        "xP médio nos passes threat — a qualidade dos passes de perigo "
-        "produzidos."
+        "Average xP on impact passes — the quality of high-value passes produced."
     ),
 }
 # Secondary key metrics (less emphasis) = traditional volume stats.
@@ -693,31 +691,30 @@ XP_COMPARE_METRIC_KEYS: tuple[str, ...] = (
 )
 XP_COMPARE_METRIC_LABELS: dict[str, str] = {
     "passes_total": "Passes",
-    "progressive_passes": "Progressivos",
-    "final_third_passes": "Terço Final",
-    "key_passes": "Passes Chave",
+    "progressive_passes": "Progressive",
+    "final_third_passes": "Final Third",
+    "key_passes": "Key Passes",
 }
 XP_COMPARE_METRIC_TOOLTIPS: dict[str, str] = {
-    "passes_total": "Passes tentados por jogo (p90).",
+    "passes_total": "Passes attempted per game (p90).",
     "progressive_passes": (
-        "Passes progressivos completados por jogo (p90) — critério Wyscout: "
-        "avanço ≥ 10 m em direção ao gol, ou ≥ 5 m dentro do terço final."
+        "Progressive passes completed per game (p90) — Wyscout criterion: "
+        "advance ≥ 10 m toward goal, or ≥ 5 m inside the final third."
     ),
     "final_third_passes": (
-        "Passes completados com destino no terço final (x ≥ 80 m) por jogo (p90) — "
-        "volume de entregas na zona de criação."
+        "Passes completed into the final third (x ≥ 80 m) per game (p90) — "
+        "volume of deliveries in the creation zone."
     ),
     "key_passes": (
-        "Passes que geram finalização por jogo (p90) — entregas que resultam "
-        "em chute."
+        "Passes leading to a shot per game (p90) — deliveries that result in a shot."
     ),
 }
 
 XP_PROFILE_BAR_TOOLTIPS: dict[str, str] = {
-    "xp_activity_display": "Impacto ofensivo por jogo: xP gerado e passes threat produzidos.",
-    "xp_edge_display": "Valor por passe: xP médio por passe e por passe threat.",
-    "xp_quality_display": "Quanto o jogador entrega acima do valor esperado pelo modelo.",
-    "xp_consistency_display": "Quão estável é o xP de jogo para jogo.",
+    "xp_activity_display": "Offensive impact per game: xP generated and impact passes produced.",
+    "xp_edge_display": "Value per pass: average xP per pass and per impact pass.",
+    "xp_quality_display": "How much the player delivers above the model's expected value.",
+    "xp_consistency_display": "How stable game-to-game xP delivery is.",
 }
 
 XP_PROFILE_ARCHETYPE_KEYS: tuple[str, ...] = (
@@ -731,36 +728,36 @@ XP_PROFILE_ARCHETYPE_KEYS: tuple[str, ...] = (
 
 XP_PROFILE_ARCHETYPE_LABELS: dict[str, str] = {
     "elite": "Elite",
-    "criativo": "Criativo",
-    "seguranca": "Segurança",
-    "impacto": "Impacto",
-    "limitado": "Limitado",
+    "criativo": "Creative",
+    "seguranca": "Safety",
+    "impacto": "Impact",
+    "limitado": "Limited",
     "regular": "Regular",
 }
 
 XP_PROFILE_ARCHETYPE_DESCRIPTIONS: dict[str, str] = {
     "elite": (
-        "Perfil completo: volume, efetividade, qualidade e consistência acima da mediana "
-        "na posição."
+        "Complete profile: volume, effectiveness, quality and consistency above the "
+        "position median."
     ),
     "criativo": (
-        "Especialista seletivo: efetividade e qualidade acima da mediana, com volume e "
-        "consistência abaixo."
+        "Selective specialist: effectiveness and quality above the median, with volume and "
+        "consistency below."
     ),
     "seguranca": (
-        "Perfil de segurança: volume e consistência acima da mediana — confiável, discreto "
-        "e estável no passe."
+        "Safety profile: volume and consistency above the median — reliable, understated "
+        "and stable in passing."
     ),
     "impacto": (
-        "Produtor de alto impacto: volume, efetividade e qualidade acima da mediana, com "
-        "consistência mais volátil."
+        "High-impact producer: volume, effectiveness and quality above the median, with "
+        "more volatile consistency."
     ),
     "limitado": (
-        "Baixo impacto relativo na posição: três ou mais eixos do xP Profile abaixo da "
-        "mediana do grupo."
+        "Low relative impact at the position: three or more xP Profile axes below the "
+        "group median."
     ),
     "regular": (
-        "Perfil equilibrado na posição, sem encaixar claramente nos demais arquétipos."
+        "Balanced profile at the position, without clearly fitting the other archetypes."
     ),
 }
 
@@ -881,65 +878,65 @@ def iter_xp_stats_sections() -> tuple[tuple[str, tuple[str, ...]], ...]:
 
 XP_STATS_LABELS: dict[str, str] = {
     "xp_per_90": "xP (Per game)",
-    "threat_passes_p90": "Threat Passes (Per game)",
+    "threat_passes_p90": "Impact Passes (Per game)",
     "xp_m4_total": "xP Total",
-    "xp_m4_threat_passes_p90": "xP Threat Passes (Per game)",
-    "xp_m4_per_pass": "xP/Passe",
-    "xp_m4_per_threat_pass": "xP/Threat Pass",
-    "xp_m4_threat_rate": "% Threat Passes",
-    "xp_m4_per_pass_short": "xP/Passe",
-    "xp_m4_per_pass_long": "xP/Passe",
-    "xp_m4_threat_rate_short": "% Threat Passes",
-    "xp_m4_threat_rate_long": "% Threat Passes",
-    "xp_m4_threat_short_p90": "xP Threat Passes (Per game)",
-    "xp_m4_threat_long_p90": "xP Threat Passes (Per game)",
-    "passes_short": "Passes na faixa",
-    "passes_long": "Passes na faixa",
+    "xp_m4_threat_passes_p90": "xP Impact Passes (Per game)",
+    "xp_m4_per_pass": "xP/Pass",
+    "xp_m4_per_threat_pass": "xP/Impact Pass",
+    "xp_m4_threat_rate": "% Impact Passes",
+    "xp_m4_per_pass_short": "xP/Pass",
+    "xp_m4_per_pass_long": "xP/Pass",
+    "xp_m4_threat_rate_short": "% Impact Passes",
+    "xp_m4_threat_rate_long": "% Impact Passes",
+    "xp_m4_threat_short_p90": "xP Impact Passes (Per game)",
+    "xp_m4_threat_long_p90": "xP Impact Passes (Per game)",
+    "passes_short": "Passes in band",
+    "passes_long": "Passes in band",
     "xp_m4_total_short": "xP Total (Short)",
-    "xp_m4_threat_short_p90": "Threat p/game (Short)",
+    "xp_m4_threat_short_p90": "Impact p/game (Short)",
     "xp_m4_total_long": "xP Total (Long)",
-    "xp_m4_threat_long_p90": "Threat p/game (Long)",
-    "xp_diagonal_long_total": "Diagonal Longa (xP)",
-    "special_diagonal_long_p90": "Diagonal Longa (Per game)",
-    "xp_line_break_total": "Quebra Linha (xP)",
-    "special_line_break_p90": "Quebra Linha (Per game)",
-    "xp_inversion_total": "Inversões (xP)",
-    "special_inversion_p90": "Inversões (Per game)",
-    "xp_cross_total": "Cruzamentos (xP)",
-    "special_cross_p90": "Cruzamentos (Per game)",
-    "xp_final_third_share": "%xP - Terço Final",
-    "threat_final_third_p90": "Threat Passes - Terço Final",
-    "xp_box_share": "%xP - Área",
-    "threat_in_box_p90": "Threat Passes - Área",
+    "xp_m4_threat_long_p90": "Impact p/game (Long)",
+    "xp_diagonal_long_total": "Long Diagonal (xP)",
+    "special_diagonal_long_p90": "Long Diagonal (Per game)",
+    "xp_line_break_total": "Line Break (xP)",
+    "special_line_break_p90": "Line Break (Per game)",
+    "xp_inversion_total": "Inversions (xP)",
+    "special_inversion_p90": "Inversions (Per game)",
+    "xp_cross_total": "Crosses (xP)",
+    "special_cross_p90": "Crosses (Per game)",
+    "xp_final_third_share": "%xP - Final Third",
+    "threat_final_third_p90": "Impact Passes - Final Third",
+    "xp_box_share": "%xP - Box",
+    "threat_in_box_p90": "Impact Passes - Box",
     "xp_from_deep": "xP Deep",
-    "threat_from_deep_p90": "Threat Passes - Deep",
-    "special_final_third_p90": "Terço final (Per game)",
-    "special_in_box_p90": "Na área (Per game)",
+    "threat_from_deep_p90": "Impact Passes - Deep",
+    "special_final_third_p90": "Final third (Per game)",
+    "special_in_box_p90": "In box (Per game)",
     "special_from_deep_p90": "From deep (Per game)",
-    "xp_residual_mean": "Resíduo médio/Passe",
-    "xp_residual_median": "Resíduo mediano/Passe",
-    "xp_residual_positive": "xP acima do esperado/Passe",
-    "xp_residual_negative": "xP abaixo do esperado / passe",
+    "xp_residual_mean": "Mean residual/Pass",
+    "xp_residual_median": "Median residual/Pass",
+    "xp_residual_positive": "xP above expected/Pass",
+    "xp_residual_negative": "xP below expected/Pass",
     "xp_surprise_rate": "Surprise Rate",
-    "xp_threat_conversion": "Threat conversion",
-    "xp_threat_mean_xp": "Mean threat xP",
-    "xp_threat_mean_residual": "Mean threat residual",
-    "xp_m4_p90": "xP P90 (passe)",
+    "xp_threat_conversion": "Impact pass conversion",
+    "xp_threat_mean_xp": "Mean impact pass xP",
+    "xp_threat_mean_residual": "Mean impact pass residual",
+    "xp_m4_p90": "xP P90 (pass)",
     "xp_max_pass": "Max single-pass xP",
-    "xp_game_mean": "xP médio (Per game)",
-    "xp_game_std": "Desvio xP",
-    "xp_game_std_adj": "Desvio xP ajustado",
-    "xp_game_std_adj_score": "Estabilidade ajustada",
+    "xp_game_mean": "Mean xP (Per game)",
+    "xp_game_std": "xP Std Dev",
+    "xp_game_std_adj": "Adjusted xP Std Dev",
+    "xp_game_std_adj_score": "Adjusted stability",
     "xp_pass_cv": "xP CV (passes)",
-    "xp_games_above_median_pct": "% Jogos acima da mediana",
-    "xp_pass_std": "Desvio xP (passes)",
+    "xp_games_above_median_pct": "% Games above median",
+    "xp_pass_std": "xP Std Dev (passes)",
     "xp_builder_index": "Builder",
     "xp_creator_index": "Creator",
     "xp_progressor_index": "Progressor",
     "xp_finisher_pass_index": "Finisher-pass",
     "xp_quality_index": "Quality",
     "xp_consistency_index": "Consistency",
-    "xp_m4_per_pass_final_third": "xP/Passe Terço Final",
+    "xp_m4_per_pass_final_third": "xP/Pass Final Third",
     "xp_archetype_creator_display": "Creator",
     "xp_archetype_progressor_display": "Progressor",
     "xp_archetype_finisher_display": "Finisher-pass",
@@ -948,27 +945,32 @@ XP_STATS_LABELS: dict[str, str] = {
 }
 
 XP_PA_LABELS: dict[str, str] = {
-    "xp_per_90": "xP / jogo",
-    "threat_passes_p90": "Threats / jogo",
-    "xp_m4_per_pass": "xP / passe",
-    "xp_m4_per_threat_pass": "xP / threat",
-    "xp_m4_threat_rate": "% threats",
-    "xp_residual_median": "Resíduo mediano",
-    "xp_surprise_rate": "% acima do esperado",
-    "xp_game_std_adj_score": "Estabilidade",
-    "xp_games_above_median_pct": "% jogos fortes",
+    "xp_per_90": "xP / game",
+    "threat_passes_p90": "Impact passes / game",
+    "xp_m4_per_pass": "xP / pass",
+    "xp_m4_per_threat_pass": "xP / impact pass",
+    "xp_m4_threat_rate": "% impact passes",
+    "xp_residual_median": "Median residual",
+    "xp_surprise_rate": "% above expected",
+    "xp_game_std_adj_score": "Stability",
+    "xp_games_above_median_pct": "% strong games",
 }
 
 XP_PA_TOOLTIPS: dict[str, str] = {
-    "xp_per_90": "Volume de xP gerado por passe, normalizado por 90 minutos.",
-    "threat_passes_p90": "Passes threat por jogo — resíduo no top 10% da distância e xP ≥ P75 na mesma faixa.",
-    "xp_m4_per_pass": "xP médio por passe — mede a eficiência de cada entrega.",
-    "xp_m4_per_threat_pass": "xP médio nos passes threat (surpresa + valor alto na distância).",
-    "xp_m4_threat_rate": "Percentual de passes que são threat no total de passes.",
-    "xp_residual_median": "Mediana do resíduo (xP real − esperado) por passe, ×100. Valores positivos indicam passes melhores que o modelo prevê.",
-    "xp_surprise_rate": "Percentual de passes com resíduo positivo — passes que superam a expectativa do modelo.",
-    "xp_game_std_adj_score": "Estabilidade de entrega entre jogos, ajustada pelo nível médio de xP do jogador.",
-    "xp_games_above_median_pct": "Percentual de jogos em que o xP do jogador ficou acima da própria mediana.",
+    "xp_per_90": "xP volume from passing, normalized per 90 minutes.",
+    "threat_passes_p90": (
+        "Impact passes per game — residual in the top 10% for distance and xP ≥ P75 in the same band."
+    ),
+    "xp_m4_per_pass": "Average xP per pass — measures the efficiency of each delivery.",
+    "xp_m4_per_threat_pass": "Average xP on impact passes (surprise + high value for distance).",
+    "xp_m4_threat_rate": "Share of passes classified as impact passes.",
+    "xp_residual_median": (
+        "Median residual (actual xP − expected) per pass, ×100. Positive values mean passes "
+        "beat the model."
+    ),
+    "xp_surprise_rate": "Share of passes with a positive residual — passes that beat expectations.",
+    "xp_game_std_adj_score": "Delivery stability across games, adjusted for the player's average xP level.",
+    "xp_games_above_median_pct": "Share of games where the player's xP was above their own median.",
 }
 
 def iter_stats_metric_options() -> tuple[tuple[str, str], ...]:
@@ -984,21 +986,21 @@ def iter_stats_metric_options() -> tuple[tuple[str, str], ...]:
 # Dispersão (scatter) — analyst-facing metrics split into two stat types.
 # Regular Stats: card stats minus the completion (% acerto) ones.
 SCATTER_REGULAR_METRIC_OPTIONS: tuple[tuple[str, str], ...] = (
-    ("passes_total", "Passes / jogo"),
-    ("long_balls", "Passes longos / jogo"),
-    ("progressive_passes", "Passes progressivos / jogo"),
-    ("final_third_passes", "Passes para terço final / jogo"),
-    ("passes_to_box", "Passes para área / jogo"),
-    ("key_passes", "Key passes / jogo"),
-    ("pass_mean_distance", "Distância média do passe"),
+    ("passes_total", "Passes / game"),
+    ("long_balls", "Long passes / game"),
+    ("progressive_passes", "Progressive passes / game"),
+    ("final_third_passes", "Passes into final third / game"),
+    ("passes_to_box", "Passes into box / game"),
+    ("key_passes", "Key passes / game"),
+    ("pass_mean_distance", "Mean pass distance"),
 )
 # Special Stat: special passes plus the xP metrics.
 SCATTER_SPECIAL_METRIC_OPTIONS: tuple[tuple[str, str], ...] = (
-    ("xp_per_90", "xP / jogo"),
-    ("threat_passes_p90", "Ações de impacto / jogo"),
-    ("xp_m4_per_pass", "xP / passe"),
-    ("xp_m4_per_threat_pass", "xP / ação de impacto"),
-    ("xp_game_std_adj_score", "Estabilidade"),
+    ("xp_per_90", "xP / game"),
+    ("threat_passes_p90", "Impact passes / game"),
+    ("xp_m4_per_pass", "xP / pass"),
+    ("xp_m4_per_threat_pass", "xP / impact pass"),
+    ("xp_game_std_adj_score", "Stability"),
 )
 SCATTER_STAT_TYPE_OPTIONS: tuple[tuple[str, str], ...] = (
     ("regular", "Regular Stats"),
@@ -1048,7 +1050,7 @@ SCATTER_BANDED_BASE_KEYS: frozenset[str] = frozenset({
 })
 SCATTER_EXTRA_BASE_KEYS: tuple[tuple[str, str], ...] = (
     ("xp_m4_total", "xP Total"),
-    ("xp_m4_threat_passes_p90", "xP Threat Passes (Per game)"),
+    ("xp_m4_threat_passes_p90", "xP Impact Passes (Per game)"),
 )
 
 

@@ -119,7 +119,7 @@ def draw_top_xp_passes_map(
                 ax.add_patch(rect)
 
     if top_passes is None or top_passes.empty:
-        ax.text(60, 40, "Sem passes com xP", ha="center", va="center", color="white", fontsize=10)
+        ax.text(60, 40, "No passes with xP", ha="center", va="center", color="white", fontsize=10)
         ax.set_title(f"{player_name}\nTop passes xP · {match_label}", color="white", fontsize=10, pad=8)
         return fig
 
@@ -293,7 +293,7 @@ def draw_special_passes_season_map(
 
     if passes is None or passes.empty:
         ax.text(
-            60, 40, "Sem passes para este filtro",
+            60, 40, "No passes for this filter",
             ha="center", va="center", color="white", fontsize=10,
         )
         ax.set_title(
@@ -363,7 +363,7 @@ def draw_passes_destination_heatmap(
 
     if passes is None or passes.empty or "x_end" not in passes.columns:
         ax.text(
-            60, 40, "Sem passes para este filtro",
+            60, 40, "No passes for this filter",
             ha="center", va="center", color="white", fontsize=10,
         )
         ax.set_title(
@@ -426,7 +426,7 @@ def draw_xp_threat_passes_season_map(
     *,
     player_name: str,
     season_label: str = "temporada",
-    distance_label: str = "todas as distâncias",
+    distance_label: str = "all distances",
     xp_col: str = "xp_m4",
 ):
     """Backward-compatible alias for threat-only season maps."""
