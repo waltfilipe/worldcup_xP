@@ -339,7 +339,9 @@ def _rating_confidence_value(
     minutes = float(player.get("minutes") or 0)
     passes = float(player.get("passes_completed") or 0)
     pass_ref = max(float(player.get("position_p25_passes") or confidence_passes), 1.0)
-    return min(1.0, minutes / confidence_minutes) * min(1.0, passes / pass_ref)
+    conf_minutes = min(1.0, minutes / confidence_minutes)
+    conf_passes = min(1.0, passes / pass_ref)
+    return (conf_minutes + conf_passes) / 2.0
 
 
 def _rating_confidence_for_key(player: dict, rating_key: str = "pass_rating") -> float:

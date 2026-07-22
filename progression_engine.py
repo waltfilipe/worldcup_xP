@@ -426,7 +426,9 @@ def _progression_rating_confidence(player: dict) -> float:
     minutes = float(player.get("minutes") or 0)
     passes = float(player.get("passes_completed") or 0)
     pass_ref = max(float(player.get("position_p25_passes") or pe.RATING_CONFIDENCE_PASSES), 1.0)
-    pass_conf = min(1.0, minutes / pe.RATING_CONFIDENCE_MINUTES) * min(1.0, passes / pass_ref)
+    pass_conf_minutes = min(1.0, minutes / pe.RATING_CONFIDENCE_MINUTES)
+    pass_conf_passes = min(1.0, passes / pass_ref)
+    pass_conf = (pass_conf_minutes + pass_conf_passes) / 2.0
 
     carry_passes = float(player.get("carry_passes_completed") or player.get("carries_total") or 0)
     carry_ref = max(
@@ -434,7 +436,9 @@ def _progression_rating_confidence(player: dict) -> float:
         1.0,
     )
     carry_minutes = float(player.get("carry_minutes") or minutes)
-    carry_conf = min(1.0, carry_minutes / pe.RATING_CONFIDENCE_MINUTES) * min(1.0, carry_passes / carry_ref)
+    carry_conf_minutes = min(1.0, carry_minutes / pe.RATING_CONFIDENCE_MINUTES)
+    carry_conf_passes = min(1.0, carry_passes / carry_ref)
+    carry_conf = (carry_conf_minutes + carry_conf_passes) / 2.0
     return min(pass_conf, carry_conf)
 
 

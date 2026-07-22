@@ -1528,7 +1528,9 @@ def _rating_confidence(player: dict) -> float:
     minutes = float(player.get("minutes") or 0)
     passes = float(player.get("passes_completed") or 0)
     pass_ref = max(float(player.get("position_p25_passes") or RATING_CONFIDENCE_PASSES), 1.0)
-    return min(1.0, minutes / RATING_CONFIDENCE_MINUTES) * min(1.0, passes / pass_ref)
+    conf_minutes = min(1.0, minutes / RATING_CONFIDENCE_MINUTES)
+    conf_passes = min(1.0, passes / pass_ref)
+    return (conf_minutes + conf_passes) / 2.0
 
 
 def _apply_rating_confidence(raw_display: float, confidence: float) -> tuple[float, float]:
