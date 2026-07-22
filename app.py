@@ -9375,19 +9375,17 @@ def render_presentation_tab(
         unsafe_allow_html=True,
     )
 
-    st.markdown('<p class="pres-section-label">As 2 dimensões do xP Profile</p>', unsafe_allow_html=True)
+    st.markdown('<p class="pres-section-label">Os 2 Eixos de Análise</p>', unsafe_allow_html=True)
     st.markdown(
         '<div class="pres-cards-2">'
         '<div class="pres-tile pres-dim">'
         '<span class="pres-icon"><i class="fa-solid fa-chart-simple"></i></span>'
         "<h5>Impacto Geral</h5>"
-        "<p>Quanto valor ofensivo o jogador produz por jogo — volume de xP gerado "
-        "e passes threat na posição.</p></div>"
+        "<p>Quanto valor total o atleta entrega e produz por jogo, através dos seus passes.</p></div>"
         '<div class="pres-tile pres-dim">'
         '<span class="pres-icon"><i class="fa-solid fa-bolt"></i></span>'
         "<h5>Impacto por Passe</h5>"
-        "<p>A eficiência de cada entrega — xP médio por passe e qualidade nos "
-        "passes de perigo (threat).</p></div>"
+        "<p>Quanto valor o atleta entrega, por passe — medida relativa.</p></div>"
         "</div>",
         unsafe_allow_html=True,
     )
