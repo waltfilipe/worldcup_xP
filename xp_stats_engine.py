@@ -774,6 +774,8 @@ XP_PASS_RATING_PERCENTILE_BANDS: tuple[tuple[float, float, float], ...] = (
     (1.00, 7.0, 4.5),   # rest
 )
 XP_PASS_RATING_CONFIDENCE_WEIGHT = 0.35
+XP_PASS_RATING_CONFIDENCE_PASS_WEIGHT = 0.65
+XP_PASS_RATING_CONFIDENCE_MINUTES_WEIGHT = 0.35
 
 BUILDER_BASE_METRICS: tuple[str, ...] = (
     "xp_line_break_total",
@@ -1556,13 +1558,19 @@ def _xp_pass_rating_tanh_display(z_score: float) -> float:
 
 
 def _xp_pass_rating_confidence(player: dict) -> float:
+    minutes = float(player.get("minutes") or 0)
     passes = float(player.get("passes_completed") or 0)
     pass_ref = max(float(player.get("position_p25_passes") or pe.RATING_CONFIDENCE_PASSES), 1.0)
-    return min(1.0, passes / pass_ref)
+    conf_minutes = min(1.0, minutes / pe.RATING_CONFIDENCE_MINUTES)
+    conf_passes = min(1.0, passes / pass_ref)
+    return (
+        XP_PASS_RATING_CONFIDENCE_PASS_WEIGHT * conf_passes
+        + XP_PASS_RATING_CONFIDENCE_MINUTES_WEIGHT * conf_minutes
+    )
 
 
-def _apply_xp_pass_rating_confidence(score_percentile: float, conf_pass: float) -> tuple[float, float]:
-    efetivo = 1.0 - XP_PASS_RATING_CONFIDENCE_WEIGHT * (1.0 - conf_pass)
+def _apply_xp_pass_rating_confidence(score_percentile: float, confidence: float) -> tuple[float, float]:
+    efetivo = 1.0 - XP_PASS_RATING_CONFIDENCE_WEIGHT * (1.0 - confidence)
     grade = efetivo * score_percentile + (1.0 - efetivo) * pe.RATING_DISPLAY_MID
     uncertainty = (1.0 - efetivo) * pe.RATING_TANH_AMPLITUDE
     return float(grade), float(uncertainty)
@@ -1594,8 +1602,8 @@ def attach_xp_pass_ratings(players: list[dict]) -> None:
     PC1 combines within-position z-scores of the four xP profile dimensions
     (Impacto Geral, Impacto por ação, Entrega vs Esperado, Consistência). Players are ranked
     by the raw PCA composite; the displayed grade maps that rank to a 4.5–9.0 scale
-    (top 10% -> 8–9, 10–30% -> 7–8, rest -> 4.5–7) with a single light pass-volume
-    confidence pull toward 6.0.
+    (top 10% -> 8–9, 10–30% -> 7–8, rest -> 4.5–7) with a single light
+    confidence pull toward 6.0 (65% passes, 35% minutes).
     """
     if not players:
         return
