@@ -49,12 +49,16 @@ XT_MAP_REF_WIDTH = 7.8
 XT_MAP_COLOR_PERCENTILE = (5.0, 95.0)
 
 # Profile origin heatmap — footer band for direction-of-attack chrome.
-PROFILE_FOOTER_FRAC = 0.17
+# `pad_bottom` (StatsBomb data units) reserves real space *below* the visible
+# pitch (data y = FIELD_Y). mplsoccer manages the pitch aspect itself and ignores
+# figure-level margins (subplots_adjust), so the footer must be created inside the
+# axes via pitch padding and the chrome anchored to the actual rendered pitch edge.
+PROFILE_PITCH_PAD_BOTTOM = 15.0
 PROFILE_ATTACK_ARROW_COLOR = "#94a3b8"
 PROFILE_ATTACK_LABEL_COLOR = "#94a3b8"
 PROFILE_ATTACK_ARROW_SPAN_FIG = 0.050
-PROFILE_ATTACK_ARROW_Y_RATIO = 0.58
-PROFILE_ATTACK_LABEL_Y_RATIO = 0.24
+PROFILE_ATTACK_ARROW_Y_RATIO = 0.60
+PROFILE_ATTACK_LABEL_Y_RATIO = 0.26
 PROFILE_ATTACK_MUTATION = 10.5
 PROFILE_ATTACK_LW = 1.35
 PROFILE_ATTACK_LABEL_FONT = 6.6
@@ -79,8 +83,19 @@ def _map_scale(fig_w: float) -> float:
     return fig_w / MAP_REF_WIDTH
 
 
-def _base_pitch(*, figsize: tuple[float, float], dpi: int, bg: str = "#1a1a2e"):
-    pitch = Pitch(pitch_type="statsbomb", pitch_color=bg, line_color="#ffffff", line_alpha=0.95)
+def _base_pitch(
+    *,
+    figsize: tuple[float, float],
+    dpi: int,
+    bg: str = "#1a1a2e",
+    pad_bottom: float | None = None,
+):
+    pitch_kwargs = dict(
+        pitch_type="statsbomb", pitch_color=bg, line_color="#ffffff", line_alpha=0.95
+    )
+    if pad_bottom is not None:
+        pitch_kwargs["pad_bottom"] = pad_bottom
+    pitch = Pitch(**pitch_kwargs)
     fig, ax = pitch.draw(figsize=figsize)
     fig.set_facecolor(bg)
     fig.set_dpi(dpi)
@@ -135,12 +150,25 @@ def _attack_arrow(fig, *, fig_w: float, has_cbar: bool = False, dashboard: bool 
 
 
 def _profile_attack_arrow(fig, ax) -> None:
-    """Centered direction-of-attack arrow in the footer band below the pitch."""
-    pos = ax.get_position()
-    center_x = pos.x0 + pos.width * 0.5
-    half_span = PROFILE_ATTACK_ARROW_SPAN_FIG * min(pos.width / 0.92, 1.08)
-    arrow_y = PROFILE_FOOTER_FRAC * PROFILE_ATTACK_ARROW_Y_RATIO
-    label_y = PROFILE_FOOTER_FRAC * PROFILE_ATTACK_LABEL_Y_RATIO
+    """Centered direction-of-attack arrow in the footer band below the pitch.
+
+    The footer band is the padding reserved below the visible pitch via
+    ``pad_bottom``. We anchor the chrome to the *actual* rendered pitch edge
+    (data y = FIELD_Y projected to figure fraction) so it can never overlap the
+    heatmap regardless of how mplsoccer resolves the pitch aspect ratio.
+    """
+    fig.canvas.draw()
+    trans = ax.transData + fig.transFigure.inverted()
+    # StatsBomb pitches draw y inverted, so data y = FIELD_Y is the visible bottom.
+    center_x = float(trans.transform((FIELD_X * 0.5, FIELD_Y))[0])
+    bottom_frac = float(trans.transform((FIELD_X * 0.5, FIELD_Y))[1])
+    left_frac = float(trans.transform((0.0, FIELD_Y))[0])
+    right_frac = float(trans.transform((FIELD_X, FIELD_Y))[0])
+    pitch_width_frac = abs(right_frac - left_frac)
+
+    half_span = PROFILE_ATTACK_ARROW_SPAN_FIG * min(pitch_width_frac / 0.92, 1.08)
+    arrow_y = bottom_frac * PROFILE_ATTACK_ARROW_Y_RATIO
+    label_y = bottom_frac * PROFILE_ATTACK_LABEL_Y_RATIO
 
     fig.patches.append(
         FancyArrowPatch(
@@ -651,7 +679,11 @@ def draw_action_origin_smooth_heatmap(
         figsize = (FIG_W_COMPACT, FIG_H_COMPACT)
         dpi = FIG_DPI_COMPACT
 
-    fig, ax, pitch = _base_pitch(figsize=figsize, dpi=dpi)
+    fig, ax, pitch = _base_pitch(
+        figsize=figsize,
+        dpi=dpi,
+        pad_bottom=PROFILE_PITCH_PAD_BOTTOM if profile else None,
+    )
     grid_x = 96
     grid_y = 64
     x_bins = np.linspace(0.0, FIELD_X, grid_x + 1)
@@ -709,7 +741,6 @@ def draw_action_origin_smooth_heatmap(
         ax.set_title(title, color="white", fontsize=8.0, pad=5)
     else:
         ax.set_title("")
-        fig.subplots_adjust(left=0.0, right=1.0, top=0.98, bottom=PROFILE_FOOTER_FRAC)
         _profile_attack_arrow(fig, ax)
     ax.set_axis_off()
     return fig

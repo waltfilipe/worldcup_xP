@@ -1930,7 +1930,15 @@ st.markdown(
         border-radius: 12px;
         padding: 1rem 1.15rem;
         margin-bottom: 0.85rem;
-        scroll-margin-top: 1rem;
+        scroll-margin-top: 30vh;
+    }
+    @keyframes pres-xp-target-glow {
+        0% { box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.0); border-color: #334155; }
+        25% { box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.45); border-color: #60a5fa; }
+        100% { box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.0); border-color: #334155; }
+    }
+    #pres-xp-card:target {
+        animation: pres-xp-target-glow 1.8s ease-out 1;
     }
     .pres-card h4 { margin: 0 0 0.35rem 0; color: #e2e8f0; font-size: 1rem; }
     .pres-card p { margin: 0; color: #94a3b8; font-size: 0.88rem; line-height: 1.45; }
@@ -3812,12 +3820,42 @@ st.markdown(
         background: linear-gradient(160deg, rgba(21, 27, 43, 0.55) 0%, rgba(15, 23, 42, 0.35) 100%);
         border: 1px solid rgba(51, 65, 85, 0.45);
     }
+    .pa-xp-dim-acc { padding: 0; overflow: hidden; }
+    .pa-xp-dim-summary {
+        list-style: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.55rem 0.5rem 0.6rem;
+    }
+    .pa-xp-dim-summary::-webkit-details-marker { display: none; }
+    .pa-xp-dim-summary-bar { flex: 1; min-width: 0; }
+    .pa-xp-dim-toggle {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.35rem;
+        height: 1.35rem;
+        border-radius: 7px;
+        color: #93c5fd;
+        font-size: 0.62rem;
+        background: rgba(147, 197, 253, 0.1);
+        border: 1px solid rgba(147, 197, 253, 0.22);
+        transition: transform 0.18s ease, background 0.14s ease;
+    }
+    .pa-xp-dim-acc[open] .pa-xp-dim-toggle {
+        transform: rotate(180deg);
+        background: rgba(147, 197, 253, 0.2);
+    }
+    .pa-xp-dim-summary:hover .pa-xp-dim-toggle { background: rgba(147, 197, 253, 0.2); }
     .pa-xp-subbars {
         display: flex;
         flex-direction: column;
         gap: 0.38rem;
-        padding: 0.5rem 0.45rem 0.42rem;
-        margin-top: 0.1rem;
+        padding: 0.5rem 0.55rem 0.55rem;
+        margin: 0 0.5rem 0.55rem;
         border-radius: 9px;
         background: rgba(10, 16, 30, 0.55);
         border: 1px solid rgba(51, 65, 85, 0.35);
@@ -3905,12 +3943,24 @@ st.markdown(
         border-color: rgba(100, 116, 139, 0.55);
         background: rgba(15, 23, 42, 0.62);
     }
+    .pa-xp-index-row-icon {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.4rem;
+        height: 1.4rem;
+        border-radius: 7px;
+        font-size: 0.66rem;
+        color: #94a3b8;
+        background: rgba(51, 65, 85, 0.35);
+    }
     .pa-xp-index-row-name {
         color: #e2e8f0;
         font-size: 0.74rem;
         font-weight: 700;
         flex: 0 0 auto;
-        min-width: 5.8rem;
+        min-width: 5.4rem;
     }
     .pa-xp-index-row-sep {
         flex: 1;
@@ -3931,10 +3981,15 @@ st.markdown(
     .pa-xp-index-row-above .pa-xp-index-row-val { color: #4ade80; }
     .pa-xp-index-row-earned {
         border-color: rgba(74, 222, 128, 0.45);
-        background: linear-gradient(90deg, rgba(74, 222, 128, 0.1) 0%, rgba(15, 23, 42, 0.45) 100%);
+        background: linear-gradient(90deg, rgba(74, 222, 128, 0.12) 0%, rgba(15, 23, 42, 0.45) 100%);
     }
     .pa-xp-index-row-earned .pa-xp-index-row-val { color: #4ade80; }
+    .pa-xp-index-row-earned .pa-xp-index-row-icon {
+        color: #4ade80;
+        background: rgba(74, 222, 128, 0.18);
+    }
     .pa-xp-index-row-locked .pa-xp-index-row-val { color: #64748b; }
+    .pa-xp-index-row-locked { opacity: 0.75; }
     .pa-xp-gradient-bar-row {
         display: flex;
         flex-direction: column;
@@ -6420,15 +6475,20 @@ def _xp_profile_dim_html(display_key: str, xp_profile: dict) -> str:
     main_bar = _xp_gradient_bar_row_html(
         xstats.XP_PROFILE_BAR_LABELS[display_key], display_key, xp_profile
     )
-    subs = "".join(
-        _xp_profile_subbar_html(xp_profile, metric)
-        for metric in xstats.XP_PROFILE_BAR_METRICS.get(display_key, ())
-    )
+    metrics = xstats.XP_PROFILE_BAR_METRICS.get(display_key, ())
+    subs = "".join(_xp_profile_subbar_html(xp_profile, metric) for metric in metrics)
+    if not subs:
+        return f'<div class="pa-xp-dim">{main_bar}</div>'
     return (
-        '<div class="pa-xp-dim">'
-        f"{main_bar}"
+        '<details class="pa-xp-dim pa-xp-dim-acc" name="pa-xp-dim">'
+        '<summary class="pa-xp-dim-summary">'
+        f'<span class="pa-xp-dim-summary-bar">{main_bar}</span>'
+        '<span class="pa-xp-dim-toggle" aria-hidden="true">'
+        '<i class="fa-solid fa-chevron-down"></i>'
+        "</span>"
+        "</summary>"
         f'<div class="pa-xp-subbars">{subs}</div>'
-        "</div>"
+        "</details>"
     )
 
 
@@ -6469,10 +6529,23 @@ def _xp_profile_bars_html(xp_profile: dict | None) -> str:
     return f'<div class="pa-xp-profile-bars">{rows}</div>'
 
 
-def _xp_index_row_html(name: str, value: str, *, row_class: str, tip: str = "") -> str:
+def _xp_index_row_html(
+    name: str,
+    value: str,
+    *,
+    row_class: str,
+    tip: str = "",
+    icon: str = "",
+) -> str:
     title = f' title="{html.escape(tip, quote=True)}"' if tip else ""
+    icon_html = (
+        f'<span class="pa-xp-index-row-icon"><i class="fa-solid {html.escape(icon)}"></i></span>'
+        if icon
+        else ""
+    )
     return (
         f'<div class="pa-xp-index-row {row_class}"{title}>'
+        f"{icon_html}"
         f'<span class="pa-xp-index-row-name">{html.escape(name)}</span>'
         '<span class="pa-xp-index-row-sep" aria-hidden="true"></span>'
         f'<span class="pa-xp-index-row-val">{html.escape(value)}</span>'
@@ -6481,23 +6554,16 @@ def _xp_index_row_html(name: str, value: str, *, row_class: str, tip: str = "") 
 
 
 def _xp_badge_row_html(xp_profile: dict, badge_spec: tuple) -> str:
-    badge_key, label, _metrics, _icon = badge_spec
+    badge_key, label, _metrics, icon = badge_spec
     earned = bool(xp_profile.get(f"{badge_key}_earned"))
-    rank = xp_profile.get(f"{badge_key}_rank")
-    pool = xp_profile.get(f"{badge_key}_rank_pool")
     tip = xstats.XP_BADGE_TOOLTIPS.get(badge_key, "")
     if earned:
-        value = f"Top {xstats.XP_BADGE_TOP_SIZE}"
-        if rank and pool:
-            value = f"#{int(rank)} · Top {xstats.XP_BADGE_TOP_SIZE}"
-        row_class = "pa-xp-index-row-earned"
-    elif rank and pool:
-        value = f"#{int(rank)}"
-        row_class = "pa-xp-index-row-locked"
+        value = "Destaque"
+        row_class = "pa-xp-index-row-badge pa-xp-index-row-earned"
     else:
         value = "—"
-        row_class = "pa-xp-index-row-locked"
-    return _xp_index_row_html(label, value, row_class=row_class, tip=tip)
+        row_class = "pa-xp-index-row-badge pa-xp-index-row-locked"
+    return _xp_index_row_html(label, value, row_class=row_class, tip=tip, icon=icon)
 
 
 def _xp_index_boxes_html(xp_profile: dict | None) -> str:
@@ -6519,7 +6585,7 @@ def _xp_index_boxes_html(xp_profile: dict | None) -> str:
             )
         )
     for spec in xstats.XP_BADGE_SPECS:
-        if xp_profile.get(f"{spec[0]}_rank_pool") is not None:
+        if xp_profile.get(f"{spec[0]}_earned") is not None:
             rows.append(_xp_badge_row_html(xp_profile, spec))
     if not rows:
         return ""
@@ -6568,10 +6634,12 @@ def _xp_profile_score_column_html(xp_profile: dict | None) -> str:
     if not xp_profile:
         return ""
     bars_html = _xp_profile_bars_html(xp_profile)
+    index_html = _xp_index_boxes_html(xp_profile)
     return (
         '<div class="player-card pa-xp-profile-card">'
         '<p class="pa-xp-profile-title">xP Profile</p>'
         f"{bars_html}"
+        f"{index_html}"
         "</div>"
     )
 
@@ -6934,12 +7002,10 @@ def _build_xp_stats_card_html(
     player: dict | None = None,
 ) -> str:
     regular_html = _pa_regular_stats_panel_html(player, xp_profile)
-    index_html = _xp_index_boxes_html(xp_profile)
     return (
         '<div class="player-card pa-pillars-card">'
         '<div class="pa-pillars-stack"><div class="pa-pillar-group">'
         f"{regular_html}"
-        f"{index_html}"
         "</div></div>"
         "</div>"
     )
@@ -9256,7 +9322,7 @@ def render_presentation_tab(
         '<span class="pres-step-num">1</span>'
         '<span class="pres-about-icon"><i class="fa-solid fa-people-group"></i></span>'
         "<div class='pres-about-body'>"
-        "<h4>O que é o dashboard</h4>"
+        "<h4>Dashboard</h4>"
         "<p>Uma ferramenta de <strong>análise por posição</strong> dos atletas: cada jogador é "
         "avaliado pelo seu perfil de passe e comparado apenas com outros da mesma função em campo.</p>"
         f"<p>Assim, o {xp_ref} revela quem realmente se destaca dentro do próprio papel tático — de "

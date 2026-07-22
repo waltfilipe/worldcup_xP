@@ -649,8 +649,8 @@ XP_BADGE_SPECS: tuple[tuple[str, str, tuple[str, ...], str], ...] = (
 )
 
 XP_BADGE_TOOLTIPS: dict[str, str] = {
-    "xp_badge_impact": "Top 25 da posição em xP por jogo e xP por passe.",
-    "xp_badge_threat": "Top 25 da posição em passes threat por jogo e xP por passe threat.",
+    "xp_badge_impact": "Destaque na posição em xP por jogo e em xP por passe.",
+    "xp_badge_threat": "Destaque na posição em passes threat por jogo e em xP por passe threat.",
 }
 
 # Player Analysis compare panel.
@@ -1364,8 +1364,6 @@ def _clear_xp_profile_bar_scores(row: dict) -> None:
         row.pop(f"{idx_key}_tier", None)
     for badge_key, _lbl, _metrics, _icon in XP_BADGE_SPECS:
         row.pop(f"{badge_key}_earned", None)
-        row.pop(f"{badge_key}_rank", None)
-        row.pop(f"{badge_key}_rank_pool", None)
     row.pop("xp_profile_archetype", None)
     row.pop("xp_profile_archetype_label", None)
     row.pop("xp_profile_archetype_description", None)
@@ -1556,15 +1554,19 @@ def _attach_secondary_indices(eligible_rows: list[dict]) -> None:
                 tier = "below"
             row[f"{idx_key}_tier"] = tier
 
-    # Achievement badges: top N among eligible peers on the metric composite.
+    # Achievement badges: earned only when the player is inside the top N of the
+    # position on EVERY metric of the pair (e.g. Impacto = top 25 em xP/Jogo E xP/Passe).
     for badge_key, _label, metrics, _icon in XP_BADGE_SPECS:
-        composite = _mean_z_columns(edf, metrics, invert=())
-        order = composite.rank(method="min", ascending=False)
+        metric_top: list[pd.Series] = []
+        for metric in metrics:
+            col = pd.to_numeric(edf.get(metric), errors="coerce")
+            order = col.rank(method="min", ascending=False)
+            metric_top.append((order <= XP_BADGE_TOP_SIZE) & col.notna())
+        earned_mask = metric_top[0]
+        for extra in metric_top[1:]:
+            earned_mask = earned_mask & extra
         for i, row in enumerate(eligible_rows):
-            rank = int(order.iloc[i])
-            row[f"{badge_key}_rank"] = rank
-            row[f"{badge_key}_rank_pool"] = pool
-            row[f"{badge_key}_earned"] = rank <= XP_BADGE_TOP_SIZE
+            row[f"{badge_key}_earned"] = bool(earned_mask.iloc[i])
 
 
 def _xp_pass_rating_shrink_sample(feature_key: str, player: dict) -> float:
