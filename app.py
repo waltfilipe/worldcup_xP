@@ -1940,6 +1940,15 @@ st.markdown(
         padding: 1.15rem 1.25rem;
     }
     .pres-card-hero h4 { font-size: 1.12rem; color: #f1f5f9; }
+    .pres-card-with-icon {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    .pres-card-with-icon .pres-about-body { flex: 1; min-width: 0; }
+    .pres-card-with-icon .pres-about-body h4 { margin: 0 0 0.35rem 0; }
+    .pres-card-with-icon .pres-hero-list,
+    .pres-card-with-icon .pres-calc-list { margin-top: 0.35rem; }
     .pres-step-num {
         position: absolute;
         top: 0.85rem;
@@ -3876,119 +3885,56 @@ st.markdown(
         letter-spacing: 0.06em;
         text-transform: uppercase;
     }
-    .pa-xp-index-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.4rem;
-    }
-    .pa-xp-index-box {
+    .pa-xp-index-list {
         display: flex;
         flex-direction: column;
-        gap: 0.14rem;
+        gap: 0.28rem;
+    }
+    .pa-xp-index-row {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
         padding: 0.42rem 0.55rem;
-        border-radius: 10px;
-        border: 1px solid transparent;
-        background: rgba(15, 23, 42, 0.55);
-        cursor: help;
-        transition: transform 0.14s ease, border-color 0.14s ease;
-    }
-    .pa-xp-index-box:hover {
-        transform: translateY(-1px);
-    }
-    .pa-xp-index-name {
-        color: #e2e8f0;
-        font-size: 0.72rem;
-        font-weight: 700;
-    }
-    .pa-xp-index-tier {
-        font-size: 0.64rem;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-    }
-    .pa-xp-index-below {
-        border-color: rgba(251, 146, 60, 0.5);
-        background: linear-gradient(160deg, rgba(251, 146, 60, 0.16) 0%, rgba(15, 23, 42, 0.55) 100%);
-    }
-    .pa-xp-index-below .pa-xp-index-tier { color: #fb923c; }
-    .pa-xp-index-mid {
-        border-color: rgba(250, 204, 21, 0.5);
-        background: linear-gradient(160deg, rgba(250, 204, 21, 0.15) 0%, rgba(15, 23, 42, 0.55) 100%);
-    }
-    .pa-xp-index-mid .pa-xp-index-tier { color: #facc15; }
-    .pa-xp-index-above {
-        border-color: rgba(74, 222, 128, 0.5);
-        background: linear-gradient(160deg, rgba(74, 222, 128, 0.16) 0%, rgba(15, 23, 42, 0.55) 100%);
-    }
-    .pa-xp-index-above .pa-xp-index-tier { color: #4ade80; }
-    .pa-xp-badge-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.4rem;
-        margin-top: 0.4rem;
-    }
-    .pa-xp-badge {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        padding: 0.5rem 0.6rem;
-        border-radius: 10px;
-        border: 1px solid transparent;
-        background: rgba(15, 23, 42, 0.55);
-        cursor: help;
-        transition: transform 0.14s ease, border-color 0.14s ease;
-    }
-    .pa-xp-badge:hover { transform: translateY(-1px); }
-    .pa-xp-badge-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 1.85rem;
-        height: 1.85rem;
         border-radius: 9px;
-        font-size: 0.82rem;
-        flex-shrink: 0;
+        border: 1px solid rgba(51, 65, 85, 0.45);
+        background: rgba(15, 23, 42, 0.45);
+        cursor: help;
+        transition: border-color 0.14s ease, background 0.14s ease;
     }
-    .pa-xp-badge-body {
-        display: flex;
-        flex-direction: column;
-        gap: 0.06rem;
-        min-width: 0;
+    .pa-xp-index-row:hover {
+        border-color: rgba(100, 116, 139, 0.55);
+        background: rgba(15, 23, 42, 0.62);
+    }
+    .pa-xp-index-row-name {
+        color: #e2e8f0;
+        font-size: 0.74rem;
+        font-weight: 700;
+        flex: 0 0 auto;
+        min-width: 5.8rem;
+    }
+    .pa-xp-index-row-sep {
         flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, rgba(100, 116, 139, 0.45), rgba(100, 116, 139, 0.12));
+        min-width: 0.8rem;
     }
-    .pa-xp-badge-name { color: #e2e8f0; font-size: 0.74rem; font-weight: 700; }
-    .pa-xp-badge-cap {
-        color: #7c8aa5;
-        font-size: 0.62rem;
-        font-weight: 600;
-        letter-spacing: 0.02em;
-    }
-    .pa-xp-badge-status {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        font-size: 0.62rem;
+    .pa-xp-index-row-val {
+        flex: 0 0 auto;
+        font-size: 0.68rem;
         font-weight: 700;
         letter-spacing: 0.02em;
+        text-align: right;
         white-space: nowrap;
     }
-    .pa-xp-badge-earned {
-        border-color: rgba(74, 222, 128, 0.55);
-        background: linear-gradient(160deg, rgba(74, 222, 128, 0.16) 0%, rgba(15, 23, 42, 0.55) 100%);
+    .pa-xp-index-row-below .pa-xp-index-row-val { color: #fb923c; }
+    .pa-xp-index-row-mid .pa-xp-index-row-val { color: #facc15; }
+    .pa-xp-index-row-above .pa-xp-index-row-val { color: #4ade80; }
+    .pa-xp-index-row-earned {
+        border-color: rgba(74, 222, 128, 0.45);
+        background: linear-gradient(90deg, rgba(74, 222, 128, 0.1) 0%, rgba(15, 23, 42, 0.45) 100%);
     }
-    .pa-xp-badge-earned .pa-xp-badge-icon {
-        background: rgba(74, 222, 128, 0.2);
-        color: #4ade80;
-    }
-    .pa-xp-badge-earned .pa-xp-badge-status { color: #4ade80; }
-    .pa-xp-badge-locked {
-        border-color: rgba(51, 65, 85, 0.6);
-        opacity: 0.72;
-    }
-    .pa-xp-badge-locked .pa-xp-badge-icon {
-        background: rgba(51, 65, 85, 0.35);
-        color: #64748b;
-    }
-    .pa-xp-badge-locked .pa-xp-badge-status { color: #64748b; }
+    .pa-xp-index-row-earned .pa-xp-index-row-val { color: #4ade80; }
+    .pa-xp-index-row-locked .pa-xp-index-row-val { color: #64748b; }
     .pa-xp-gradient-bar-row {
         display: flex;
         flex-direction: column;
@@ -6523,61 +6469,66 @@ def _xp_profile_bars_html(xp_profile: dict | None) -> str:
     return f'<div class="pa-xp-profile-bars">{rows}</div>'
 
 
-def _xp_badge_row_html(xp_profile: dict, badge_spec: tuple) -> str:
-    badge_key, label, caption, _metrics, icon = badge_spec
-    earned = bool(xp_profile.get(f"{badge_key}_earned"))
-    above = int(xp_profile.get(f"{badge_key}_above_count") or 0)
-    total = int(xp_profile.get(f"{badge_key}_metric_count") or 0)
-    tip = xstats.XP_BADGE_TOOLTIPS.get(badge_key, "")
-    state = "earned" if earned else "locked"
-    if earned:
-        status_icon = '<i class="fa-solid fa-circle-check"></i>'
-        status_text = "Acima da média"
-    else:
-        status_icon = '<i class="fa-regular fa-circle"></i>'
-        status_text = f"{above} de {total}" if total else "—"
+def _xp_index_row_html(name: str, value: str, *, row_class: str, tip: str = "") -> str:
+    title = f' title="{html.escape(tip, quote=True)}"' if tip else ""
     return (
-        f'<div class="pa-xp-badge pa-xp-badge-{state}" title="{html.escape(tip, quote=True)}">'
-        f'<span class="pa-xp-badge-icon"><i class="fa-solid {html.escape(icon)}"></i></span>'
-        '<span class="pa-xp-badge-body">'
-        f'<span class="pa-xp-badge-name">{html.escape(label)}</span>'
-        f'<span class="pa-xp-badge-cap">{html.escape(caption)}</span>'
-        "</span>"
-        f'<span class="pa-xp-badge-status">{status_icon}<span>{html.escape(status_text)}</span></span>'
+        f'<div class="pa-xp-index-row {row_class}"{title}>'
+        f'<span class="pa-xp-index-row-name">{html.escape(name)}</span>'
+        '<span class="pa-xp-index-row-sep" aria-hidden="true"></span>'
+        f'<span class="pa-xp-index-row-val">{html.escape(value)}</span>'
         "</div>"
     )
+
+
+def _xp_badge_row_html(xp_profile: dict, badge_spec: tuple) -> str:
+    badge_key, label, _metrics, _icon = badge_spec
+    earned = bool(xp_profile.get(f"{badge_key}_earned"))
+    rank = xp_profile.get(f"{badge_key}_rank")
+    pool = xp_profile.get(f"{badge_key}_rank_pool")
+    tip = xstats.XP_BADGE_TOOLTIPS.get(badge_key, "")
+    if earned:
+        value = f"Top {xstats.XP_BADGE_TOP_SIZE}"
+        if rank and pool:
+            value = f"#{int(rank)} · Top {xstats.XP_BADGE_TOP_SIZE}"
+        row_class = "pa-xp-index-row-earned"
+    elif rank and pool:
+        value = f"#{int(rank)}"
+        row_class = "pa-xp-index-row-locked"
+    else:
+        value = "—"
+        row_class = "pa-xp-index-row-locked"
+    return _xp_index_row_html(label, value, row_class=row_class, tip=tip)
 
 
 def _xp_index_boxes_html(xp_profile: dict | None) -> str:
     if not xp_profile or not xp_profile.get("xp_profile_bars_eligible", True):
         return ""
-    boxes: list[str] = []
+    rows: list[str] = []
     for idx_key, label, _metrics, _invert in xstats.XP_INDEX_SPECS:
         tier = xp_profile.get(f"{idx_key}_tier")
         if not tier:
             continue
         tier_label = xstats.XP_INDEX_TIER_LABELS.get(tier, "—")
         tip = xstats.XP_INDEX_TOOLTIPS.get(idx_key, "")
-        boxes.append(
-            f'<div class="pa-xp-index-box pa-xp-index-{tier}" title="{html.escape(tip, quote=True)}">'
-            f'<span class="pa-xp-index-name">{html.escape(label)}</span>'
-            f'<span class="pa-xp-index-tier">{html.escape(tier_label)}</span>'
-            "</div>"
+        rows.append(
+            _xp_index_row_html(
+                label,
+                tier_label,
+                row_class=f"pa-xp-index-row-{tier}",
+                tip=tip,
+            )
         )
-    badges = [
-        _xp_badge_row_html(xp_profile, spec)
-        for spec in xstats.XP_BADGE_SPECS
-        if xp_profile.get(f"{spec[0]}_metric_count") is not None
-    ]
-    if not boxes and not badges:
+    for spec in xstats.XP_BADGE_SPECS:
+        if xp_profile.get(f"{spec[0]}_rank_pool") is not None:
+            rows.append(_xp_badge_row_html(xp_profile, spec))
+    if not rows:
         return ""
-    sections = ['<div class="pa-xp-index-wrap">', '<div class="pa-xp-index-title">Índices xP</div>']
-    if boxes:
-        sections.append(f'<div class="pa-xp-index-grid">{"".join(boxes)}</div>')
-    if badges:
-        sections.append(f'<div class="pa-xp-badge-list">{"".join(badges)}</div>')
-    sections.append("</div>")
-    return "".join(sections)
+    return (
+        '<div class="pa-xp-index-wrap">'
+        '<div class="pa-xp-index-title">Índices xP</div>'
+        f'<div class="pa-xp-index-list">{"".join(rows)}</div>'
+        "</div>"
+    )
 
 
 def _xp_profile_archetype_html(xp_profile: dict | None, *, as_title: bool = False) -> str:
@@ -9316,9 +9267,11 @@ def render_presentation_tab(
     )
 
     st.markdown(
-        '<div class="pres-card pres-card-hero" id="pres-xp-card">'
+        '<div class="pres-card pres-card-hero pres-card-with-icon" id="pres-xp-card">'
         '<span class="pres-step-num pres-step-num-accent">2</span>'
-        f"<h4>O que é o {html.escape(APP_NAME)} · xP</h4>"
+        '<span class="pres-about-icon"><i class="fa-solid fa-lightbulb"></i></span>'
+        "<div class='pres-about-body'>"
+        "<h4>xP (Expected Pass) - Explicado</h4>"
         "<ul class='pres-hero-list'>"
         "<li>O <em>xP (Expected Pass)</em> tem como objetivo definir um valor para cada passe "
         "realizado por um atleta.</li>"
@@ -9328,20 +9281,24 @@ def render_presentation_tab(
         "<li>O modelo também ajusta o valor pela progressão do passe (se progride no campo) e "
         "pela acessibilidade do destino (destinos mais ou menos óbvios).</li>"
         "</ul>"
+        "</div>"
         "</div>",
         unsafe_allow_html=True,
     )
 
     st.markdown(
-        '<div class="pres-card">'
+        '<div class="pres-card pres-card-with-icon">'
         '<span class="pres-step-num">3</span>'
-        "<h4>Como o xP é calculado</h4>"
+        '<span class="pres-about-icon"><i class="fa-solid fa-calculator"></i></span>'
+        "<div class='pres-about-body'>"
+        "<h4>Como o xP é calculado?</h4>"
         "<ul class='pres-calc-list'>"
         "<li><strong>Campo em células</strong> — grades 12×8 de origem e destino.</li>"
         "<li><strong>Referência global</strong> — raridade medida no pool de 900k+ passes.</li>"
         "<li><strong>Progressão</strong> — avanço ao gol aumenta; recuo e lateral reduzem.</li>"
         "<li><strong>Acessibilidade</strong> — passes fáceis no setor defensivo são descontados.</li>"
         "</ul>"
+        "</div>"
         "</div>",
         unsafe_allow_html=True,
     )

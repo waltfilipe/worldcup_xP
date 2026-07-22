@@ -625,8 +625,8 @@ XP_PROFILE_SUBMETRICS: tuple[str, ...] = (
 # Secondary indices shown as coloured status boxes below the regular stats.
 # (index_key, label, metrics, invert_metrics)
 XP_INDEX_SPECS: tuple[tuple[str, str, tuple[str, ...], tuple[str, ...]], ...] = (
-    ("xp_idx_surprise", "Superação", ("xp_residual_median",), ()),
     ("xp_idx_consistency", "Consistência", ("xp_game_std_adj_score",), ()),
+    ("xp_idx_surprise", "Superação", ("xp_residual_median",), ()),
 )
 
 XP_INDEX_TIER_LABELS: dict[str, str] = {
@@ -636,28 +636,21 @@ XP_INDEX_TIER_LABELS: dict[str, str] = {
 }
 
 XP_INDEX_TOOLTIPS: dict[str, str] = {
-    "xp_idx_surprise": "Quanto o jogador entrega acima do valor esperado pelo modelo (resíduo mediano).",
     "xp_idx_consistency": "Estabilidade do xP de jogo para jogo.",
+    "xp_idx_surprise": "Quanto o jogador entrega acima do valor esperado pelo modelo (resíduo mediano).",
 }
 
-# Achievement badges — earned when the player is above the position median on
-# BOTH metrics of the pair. (badge_key, label, metric_caption, metrics, icon)
-XP_BADGE_SPECS: tuple[tuple[str, str, str, tuple[str, ...], str], ...] = (
-    ("xp_badge_impact", "Impacto xP", "xP/Jogo · xP/Passe", ("xp_per_90", "xp_m4_per_pass"), "fa-bolt"),
-    (
-        "xp_badge_threat",
-        "Ameaça",
-        "Threat/Jogo · xP/Threat",
-        ("threat_passes_p90", "xp_m4_per_threat_pass"),
-        "fa-crosshairs",
-    ),
+# Achievement badges — earned when ranked in the top N among eligible peers on the
+# composite of the badge metrics. (badge_key, label, metrics, icon)
+XP_BADGE_TOP_SIZE = 25
+XP_BADGE_SPECS: tuple[tuple[str, str, tuple[str, ...], str], ...] = (
+    ("xp_badge_impact", "Impacto", ("xp_per_90", "xp_m4_per_pass"), "fa-bolt"),
+    ("xp_badge_threat", "Ameaça", ("threat_passes_p90", "xp_m4_per_threat_pass"), "fa-crosshairs"),
 )
 
 XP_BADGE_TOOLTIPS: dict[str, str] = {
-    "xp_badge_impact": "Acima da média da posição em xP por jogo e em xP por passe.",
-    "xp_badge_threat": (
-        "Acima da média da posição em passes threat por jogo e em xP por passe threat."
-    ),
+    "xp_badge_impact": "Top 25 da posição em xP por jogo e xP por passe.",
+    "xp_badge_threat": "Top 25 da posição em passes threat por jogo e xP por passe threat.",
 }
 
 # Player Analysis compare panel.
@@ -1369,10 +1362,10 @@ def _clear_xp_profile_bar_scores(row: dict) -> None:
     for idx_key, _lbl, _metrics, _inv in XP_INDEX_SPECS:
         row.pop(idx_key, None)
         row.pop(f"{idx_key}_tier", None)
-    for badge_key, _lbl, _cap, _metrics, _icon in XP_BADGE_SPECS:
+    for badge_key, _lbl, _metrics, _icon in XP_BADGE_SPECS:
         row.pop(f"{badge_key}_earned", None)
-        row.pop(f"{badge_key}_above_count", None)
-        row.pop(f"{badge_key}_metric_count", None)
+        row.pop(f"{badge_key}_rank", None)
+        row.pop(f"{badge_key}_rank_pool", None)
     row.pop("xp_profile_archetype", None)
     row.pop("xp_profile_archetype_label", None)
     row.pop("xp_profile_archetype_description", None)
@@ -1563,28 +1556,15 @@ def _attach_secondary_indices(eligible_rows: list[dict]) -> None:
                 tier = "below"
             row[f"{idx_key}_tier"] = tier
 
-    # Achievement badges: earned when above the position median on both metrics.
-    badge_medians: dict[str, float | None] = {}
-    for _key, _label, _cap, metrics, _icon in XP_BADGE_SPECS:
-        for metric in metrics:
-            if metric not in badge_medians:
-                col = pd.to_numeric(edf.get(metric), errors="coerce")
-                badge_medians[metric] = float(col.median()) if col.notna().any() else None
-    for row in eligible_rows:
-        for badge_key, _label, _cap, metrics, _icon in XP_BADGE_SPECS:
-            above_count = 0
-            valid = True
-            for metric in metrics:
-                median = badge_medians.get(metric)
-                value = row.get(metric)
-                if median is None or value is None:
-                    valid = False
-                    break
-                if float(value) > median:
-                    above_count += 1
-            row[f"{badge_key}_earned"] = bool(valid and above_count == len(metrics))
-            row[f"{badge_key}_above_count"] = int(above_count)
-            row[f"{badge_key}_metric_count"] = len(metrics)
+    # Achievement badges: top N among eligible peers on the metric composite.
+    for badge_key, _label, metrics, _icon in XP_BADGE_SPECS:
+        composite = _mean_z_columns(edf, metrics, invert=())
+        order = composite.rank(method="min", ascending=False)
+        for i, row in enumerate(eligible_rows):
+            rank = int(order.iloc[i])
+            row[f"{badge_key}_rank"] = rank
+            row[f"{badge_key}_rank_pool"] = pool
+            row[f"{badge_key}_earned"] = rank <= XP_BADGE_TOP_SIZE
 
 
 def _xp_pass_rating_shrink_sample(feature_key: str, player: dict) -> float:
