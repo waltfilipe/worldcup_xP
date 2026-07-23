@@ -183,6 +183,8 @@ MAPS_SPECIAL_PASS_OPTIONS: tuple[tuple[str, str], ...] = (
         "xp_threat_long",
         f"xP {IMPACT_PASS_ABBR} · Long ({DISTANCE_BAND_LABELS['long']})",
     ),
+    ("diagonal_long", "Long Diagonal"),
+    ("line_break", "Line Break"),
 )
 MAPS_STAT_TYPE_OPTIONS: tuple[tuple[str, str], ...] = (
     ("regular", "Regular Stats"),
